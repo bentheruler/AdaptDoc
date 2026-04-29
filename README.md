@@ -1,0 +1,2 @@
+# AdoptDoc
+Intelligent Document Generator
