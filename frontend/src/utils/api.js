@@ -39,8 +39,11 @@ export const verifyEmail = (token) =>
 export const forgotPassword = (email) =>
   api.post('/auth/forgot-password', { email });
 
-export const resetPassword = (token, password) =>
-  api.post(`/auth/reset-password/${token}`, { password });
+export const resetPassword = (token, newPassword) =>
+  api.post(`/auth/reset-password/${token}`, { newPassword });
+
+export const resendVerification = (email) =>
+  api.post('/auth/resend-verification', { email });
 
 export const getDocuments = () => api.get('/documents');
 

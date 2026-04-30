@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { login } from '../utils/api';
-import axios from 'axios';
+import { login, resendVerification } from '../utils/api';
 import './Auth.css';
 
 const Login = () => {
@@ -137,7 +136,7 @@ const Login = () => {
         return;
       }
 
-      const res = await axios.post('/api/auth/resend-verification', { email });
+      const res = await resendVerification(email);
       setResendMessage(res.data.message || 'Verification email sent.');
     } catch (err) {
       setResendMessage(

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { register } from '../utils/api';
-import axios from 'axios';
+import { register, resendVerification } from '../utils/api';
 import './Auth.css';
 
 const Register = () => {
@@ -185,7 +184,7 @@ const Register = () => {
         return;
       }
 
-      const res = await axios.post('/api/auth/resend-verification', { email });
+      const res = await resendVerification(email);
 
       setResendMessage(
         res.data.message || 'Verification email has been sent again.'
