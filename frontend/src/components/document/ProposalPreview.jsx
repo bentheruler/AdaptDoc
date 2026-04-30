@@ -1,6 +1,16 @@
 // client/src/components/document/ProposalPreview.jsx
 import EditableField from '../common/EditableField';
 
+/* ─── Google Fonts loader ─── */
+const loadedFonts = new Set();
+const loadFont = (url) => {
+  if (loadedFonts.has(url)) return;
+  loadedFonts.add(url);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet'; link.href = url;
+  document.head.appendChild(link);
+};
+
 /* ══════════════════════════════════════════════════
    NORMALISE — safe defaults so themes never crash
 ══════════════════════════════════════════════════ */
@@ -26,7 +36,7 @@ const normalise = (data = {}) => ({
 /* ══════════════════════════════════════════════════
    DISPATCHER
 ══════════════════════════════════════════════════ */
-const ProposalPreview = ({ data, onDataChange, theme, fontSize, accentColor, editMode }) => {
+const ProposalPreview = ({ data, onDataChange, theme, fontSize, fontFamily = 'Inter', spacing = 'normal', accentColor, editMode }) => {
   const nd     = normalise(data);
   const accent = accentColor || '#1e3a5f';
   const fz     = parseInt(fontSize) || 12;
@@ -50,7 +60,19 @@ const ProposalPreview = ({ data, onDataChange, theme, fontSize, accentColor, edi
     Sunset:      SunsetProposal,
   };
   const Comp = map[theme] || ModernProposal;
-  return <Comp {...props} />;
+
+  const lineHeight = spacing === 'compact' ? 1.3 : spacing === 'relaxed' ? 1.8 : 1.5;
+
+  if (fontFamily) {
+    const url = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700&display=swap`;
+    loadFont(url);
+  }
+
+  return (
+    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight }}>
+      <Comp {...props} />
+    </div>
+  );
 };
 
 export default ProposalPreview;
@@ -587,10 +609,9 @@ function TimelineProposal({ data, update, accent, fz, editMode }) {
    11. INFOGRAPHIC — visual cards layout
 ══════════════════════════════════════════════════ */
 function InfographicProposal({ data, update, accent, fz, editMode }) {
-  const S = ({ label, icon, children }) => (
+  const S = ({ label, children }) => (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
-        <span style={{ fontSize: 14 }}>{icon}</span>
         <span style={{ fontSize: fz * 0.7, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: accent }}>{label}</span>
         <div style={{ flex: 1, height: '1px', background: `${accent}20` }} />
       </div>
@@ -604,19 +625,19 @@ function InfographicProposal({ data, update, accent, fz, editMode }) {
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.8, fontWeight: 700, color: '#fff', display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.82, color: 'rgba(255,255,255,0.8)', fontWeight: 400, marginTop: 5, display: 'block' }} />
         <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
-          {[['👤','preparedBy'],['🏢','preparedFor'],['📅','date']].map(([icon,f])=>(data[f]||editMode)&&(
+          {[['By:','preparedBy'],['For:','preparedFor'],['Date:','date']].map(([label,f])=>(data[f]||editMode)&&(
             <div key={f} style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: fz * 0.78, color: '#fff' }}>
-              <span>{icon}</span><EditableField value={data[f]||''} onChange={v=>update(f,v)} editMode={editMode} style={{ color: '#fff' }} inputStyle={{ color: '#fff', background: 'transparent', border: 'none' }} />
+              <span style={{ fontWeight: 600 }}>{label}</span><EditableField value={data[f]||''} onChange={v=>update(f,v)} editMode={editMode} style={{ color: '#fff' }} inputStyle={{ color: '#fff', background: 'transparent', border: 'none' }} />
             </div>
           ))}
         </div>
       </div>
       <div style={{ padding: '22px 32px' }}>
-        {[['📊','Executive Summary','executiveSummary'],['❓','Problem','problemStatement'],['💡','Solution','proposedSolution']].map(([icon,label,field])=>
-          (editMode||data[field])&&<S key={field} label={label} icon={icon}><EditableField value={data[field]} onChange={v=>update(field,v)} editMode={editMode} multiline style={{ fontSize: fz * 0.88, color: '#444', lineHeight: 1.7 }} /></S>
+        {[['Executive Summary','executiveSummary'],['Problem','problemStatement'],['Solution','proposedSolution']].map(([label,field])=>
+          (editMode||data[field])&&<S key={field} label={label}><EditableField value={data[field]} onChange={v=>update(field,v)} editMode={editMode} multiline style={{ fontSize: fz * 0.88, color: '#444', lineHeight: 1.7 }} /></S>
         )}
-        {(editMode||data.deliverables.length>0)&&<S label="Deliverables" icon="✅"><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 16px' }}><Deliverables items={data.deliverables} update={update} editMode={editMode} accent={accent} fz={fz} bulletSx={{ color: '#16a34a', fontWeight: 700 }} itemSx={{ color: '#374151' }} /></div></S>}
-        {(editMode||data.timeline.length>0)&&<S label="Timeline" icon="📅"><div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{data.timeline.map((t,i)=>(
+        {(editMode||data.deliverables.length>0)&&<S label="Deliverables"><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 16px' }}><Deliverables items={data.deliverables} update={update} editMode={editMode} accent={accent} fz={fz} bulletSx={{ color: '#16a34a', fontWeight: 700 }} itemSx={{ color: '#374151' }} /></div></S>}
+        {(editMode||data.timeline.length>0)&&<S label="Timeline"><div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{data.timeline.map((t,i)=>(
           <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', background: '#f8fafc', borderRadius: 8, padding: '8px 12px' }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fz * 0.75, fontWeight: 700, flexShrink: 0 }}>{i+1}</div>
             <div style={{ flex: 1 }}>
@@ -628,17 +649,15 @@ function InfographicProposal({ data, update, accent, fz, editMode }) {
         ))}</div></S>}
         {(editMode||data.budget)&&<div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
           <div style={{ flex: 1, background: `${accent}12`, border: `2px solid ${accent}30`, borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 20 }}>💰</div>
             <div style={{ fontSize: fz * 0.68, color: accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0' }}>Total Budget</div>
             <EditableField value={data.budget} onChange={v=>update('budget',v)} editMode={editMode} style={{ fontSize: fz * 1.2, fontWeight: 700, color: accent }} />
           </div>
           {(editMode||data.validity)&&<div style={{ flex: 1, border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 20 }}>📋</div>
             <div style={{ fontSize: fz * 0.68, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0' }}>Valid For</div>
             <EditableField value={data.validity} onChange={v=>update('validity',v)} editMode={editMode} style={{ fontSize: fz * 0.92, fontWeight: 600, color: '#374151' }} />
           </div>}
         </div>}
-        {(editMode||data.closingNote)&&<S label="Closing" icon="✍️"><EditableField value={data.closingNote} onChange={v=>update('closingNote',v)} editMode={editMode} multiline style={{ fontSize: fz * 0.88, color: '#444', lineHeight: 1.7, fontStyle: 'italic' }} /></S>}
+        {(editMode||data.closingNote)&&<S label="Closing"><EditableField value={data.closingNote} onChange={v=>update('closingNote',v)} editMode={editMode} multiline style={{ fontSize: fz * 0.88, color: '#444', lineHeight: 1.7, fontStyle: 'italic' }} /></S>}
         {(editMode||data.contactName)&&<div style={{ background: `${accent}08`, border: `1.5px solid ${accent}20`, borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fz * 1.1, flexShrink: 0 }}>{data.contactName ? data.contactName[0].toUpperCase() : '?'}</div>
           <div><EditableField value={data.contactName}  onChange={v=>update('contactName', v)}  editMode={editMode} style={{ fontWeight: 700, color: accent, display: 'block' }} /><EditableField value={data.contactEmail} onChange={v=>update('contactEmail',v)} editMode={editMode} style={{ fontSize: fz * 0.82, color: '#64748b', display: 'block', marginTop: 1 }} /></div>
@@ -795,9 +814,9 @@ function SunsetProposal({ data, update, accent, fz, editMode }) {
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.9, fontWeight: 700, color: '#fff', lineHeight: 1.15, display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.82, color: 'rgba(255,255,255,0.85)', fontWeight: 500, marginTop: 6, display: 'block' }} />
         <div style={{ display: 'flex', gap: 16, marginTop: 14, flexWrap: 'wrap' }}>
-          {[['preparedBy','👤'],['preparedFor','🏢'],['date','📅']].map(([f,icon])=>(data[f]||editMode)&&(
+          {[['preparedBy','By:'],['preparedFor','For:'],['date','Date:']].map(([f,label])=>(data[f]||editMode)&&(
             <div key={f} style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '4px 12px', fontSize: fz * 0.76, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span>{icon}</span><EditableField value={data[f]||''} onChange={v=>update(f,v)} editMode={editMode} style={{ color: '#fff' }} inputStyle={{ color: '#fff', background: 'transparent', border: 'none' }} />
+              <span style={{ fontWeight: 600 }}>{label}</span><EditableField value={data[f]||''} onChange={v=>update(f,v)} editMode={editMode} style={{ color: '#fff' }} inputStyle={{ color: '#fff', background: 'transparent', border: 'none' }} />
             </div>
           ))}
         </div>

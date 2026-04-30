@@ -5,7 +5,7 @@ import React from "react";
 export default function HomeTab({ user, documents, onNavigate, loadingDocuments }) {
   // Calculate stats
   const totalDocs = documents?.length || 0;
-  const cvDocs = documents?.filter(d => d.type === 'cv') || [];
+
   const exports = documents?.filter(d => d.type === 'cover-letter' || d.type === 'proposal') || [];
   const drafts = documents?.filter(d => !d.finalized) || [];
 

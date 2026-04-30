@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
+import { useReactToPrint } from 'react-to-print';
 import { useAuth } from '../../context/AuthContext';
 
 import Sidebar from '../../components/common/Sidebar';
@@ -23,24 +24,6 @@ import SettingsTab from './SettingsTab';
 import { useDocuments } from '../../hooks/useDocuments';
 import { useUI } from '../../hooks/useUI';
 import { useAI } from '../../hooks/useAI';
-
-async function loadPdfLibs() {
-  const load = (src) =>
-    new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = res;
-      s.onerror = rej;
-      document.head.appendChild(s);
-    });
-
-  if (!window.html2canvas) {
-    await load('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-  }
-  if (!window.jspdf) {
-    await load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-  }
-}
 
 const safe = (v) => {
   if (!v) return '';
@@ -343,7 +326,6 @@ const RightPanelTabs = ({ active, onChange }) => {
 
 const DashboardPage = () => {
   const { user, logoutUser } = useAuth();
-  const navigate = useNavigate();
 
   const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen } = useUI();
   const { documents, loadingDocuments, loadDocuments, saveDocument, deleteDocument } = useDocuments();
@@ -542,44 +524,19 @@ const DashboardPage = () => {
     setCreateStep('preview');
   };
 
-  const handleDownloadPDF = async () => {
-    if (!previewRef.current) return;
-
-    try {
-      setPdfLoading(true);
-      await loadPdfLibs();
-
-      const canvas = await window.html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const ih = (canvas.height * pw) / canvas.width;
-
-      let left = ih;
-      let pos = 0;
-
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, pw, ih);
-      left -= ph;
-
-      while (left > 0) {
-        pos -= ph;
-        pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, pw, ih);
-        left -= ph;
-      }
-
-      pdf.save(`${docType}_document.pdf`);
-    } catch {
-      alert('PDF export failed');
-    } finally {
+  const reactToPrintFn = useReactToPrint({
+    contentRef: previewRef,
+    documentTitle: `${docType}_document`,
+    onBeforeGetContent: () => setPdfLoading(true),
+    onAfterPrint: () => setPdfLoading(false),
+    onPrintError: () => {
       setPdfLoading(false);
+      alert('PDF export failed');
     }
+  });
+
+  const handleDownloadPDF = async () => {
+    reactToPrintFn();
   };
 
   const handleDownloadWord = async () => {
@@ -644,6 +601,8 @@ const DashboardPage = () => {
             onDataChange={setCoverLetterData}
             theme={t}
             fontSize={fontSize}
+            fontFamily={fontFamily}
+            spacing={spacing}
             accentColor={accentColor}
             editMode={editMode}
           />
@@ -657,6 +616,8 @@ const DashboardPage = () => {
             onDataChange={setProposalData}
             theme={t}
             fontSize={fontSize}
+            fontFamily={fontFamily}
+            spacing={spacing}
             accentColor={accentColor}
             editMode={editMode}
           />
@@ -669,12 +630,14 @@ const DashboardPage = () => {
           onDataChange={setCvData}
           theme={t}
           fontSize={fontSize}
+          fontFamily={fontFamily}
+          spacing={spacing}
           accentColor={accentColor}
           editMode={editMode}
         />
       );
     },
-    [category, coverLetterData, proposalData, cvData, theme, fontSize, accentColor, editMode]
+    [category, coverLetterData, proposalData, cvData, theme, fontSize, fontFamily, spacing, accentColor, editMode]
   );
 
   const renderForm = () => {
@@ -921,7 +884,13 @@ const DashboardPage = () => {
 
               {!loadingDocuments && documents.length === 0 && (
                 <div style={s.emptyState}>
-                  <div style={{ fontSize: 42, marginBottom: 14 }}>📄</div>
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8', marginBottom: 14 }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
                   <h3 style={{ color: '#94a3b8', fontWeight: 600, margin: '0 0 8px' }}>No documents yet</h3>
                   <p style={{ color: '#475569', fontSize: 13, margin: '0 0 20px' }}>Create your first document to get started</p>
                   <button style={s.btnGenerate} onClick={() => setActiveTab('create')}>
@@ -958,8 +927,14 @@ const DashboardPage = () => {
                             borderBottom: '1px solid #0f172a',
                           }}
                         >
-                          <span style={{ fontSize: 28 }}>
-                            {dt === 'cv' ? '📋' : dt === 'cover_letter' ? '✉️' : '💼'}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {dt === 'cv' ? (
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            ) : dt === 'cover_letter' ? (
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            ) : (
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            )}
                           </span>
                         </div>
 

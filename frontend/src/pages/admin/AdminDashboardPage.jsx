@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
 } from 'recharts';
 
 const UsersIcon = () => (
@@ -21,7 +21,8 @@ const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
 );
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api`;
 
 const AdminDashboardPage = () => {
   const { token, user } = useAuth();
@@ -35,13 +36,9 @@ const AdminDashboardPage = () => {
 
   const [loading, setLoading] = useState(true);
 
-  const getHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
+  const getHeaders = React.useCallback(() => ({ headers: { Authorization: `Bearer ${token}` } }), [token]);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'overview') {
@@ -65,7 +62,12 @@ const AdminDashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, getHeaders]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
 
   const toggleUserStatus = async (userId, currentStatus) => {
     try {
@@ -352,7 +354,7 @@ const AdminDashboardPage = () => {
             />
             <span style={{fontWeight: 600, color: '#e2e8f0'}}>Enable Fallback</span>
           </label>
-          <p style={s.hint} style={{marginLeft: 24, ...s.hint}}>If the preferred provider fails, attempt the other provider automatically.</p>
+          <p style={{marginLeft: 24, ...s.hint}}>If the preferred provider fails, attempt the other provider automatically.</p>
         </div>
 
         <div style={s.formGroup}>
@@ -364,7 +366,7 @@ const AdminDashboardPage = () => {
             />
             <span style={{fontWeight: 600, color: '#ef4444'}}>Maintenance Mode</span>
           </label>
-          <p style={s.hint} style={{marginLeft: 24, ...s.hint}}>Disable all AI functionality across the app. Users will see a maintenance message.</p>
+          <p style={{marginLeft: 24, ...s.hint}}>Disable all AI functionality across the app. Users will see a maintenance message.</p>
         </div>
 
         <button type="submit" style={s.btnSave}>Save Settings</button>

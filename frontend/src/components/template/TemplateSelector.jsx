@@ -31,7 +31,7 @@ const PlaceholderPreview = ({ name, accent }) => {
   const isTwoCol= name === 'Academic' || name === 'Chicago';
   const isCenter= ['Classic','Elegant'].includes(name);
   const bg      = isDark ? '#0d1117' : ['Classic'].includes(name) ? '#fffef9' : ['Minimal','Nordic'].includes(name) ? '#fafafa' : '#fff';
-  const textColor  = isDark ? '#e6edf3' : '#111';
+
   const mutedColor = isDark ? '#8b949e' : '#94a3b8';
   const lineColor  = isDark ? '#30363d' : '#e2e8f0';
 
@@ -288,7 +288,7 @@ const LargePlaceholder = ({ name: themeName, accent }) => {
     </div>
   );
 
-  const Ln = ({ w, h = 3, c }) => <div style={{ height: h, width: typeof w === 'string' ? w : `${w}%`, borderRadius: 2, background: c || lc, marginBottom: 4 }} />;
+
 
   return (
     <div style={{ fontFamily: 'sans-serif', fontSize: fz, background: bg, minHeight: 420, color: tc }}>
@@ -459,7 +459,7 @@ const TemplateSelector = ({
         {/* accent color */}
         <div style={ts.sec}>
           <button style={ts.secHdr} onClick={() => tog('color')}>
-            <span style={ts.secTtl}>🖌 Accent Colour</span>
+            <span style={ts.secTtl}>Accent Colour</span>
             <span style={{ color:'#475569', transition:'transform 0.2s', transform: openSec.color?'rotate(180deg)':'none', display:'inline-block' }}>▾</span>
           </button>
           {openSec.color && (
@@ -490,7 +490,7 @@ const TemplateSelector = ({
         {/* typography */}
         <div style={ts.sec}>
           <button style={ts.secHdr} onClick={() => tog('typo')}>
-            <span style={ts.secTtl}>🔤 Typography</span>
+            <span style={ts.secTtl}>Typography</span>
             <span style={{ color:'#475569', transition:'transform 0.2s', transform: openSec.typo?'rotate(180deg)':'none', display:'inline-block' }}>▾</span>
           </button>
           {openSec.typo && (
@@ -518,7 +518,7 @@ const TemplateSelector = ({
         {/* page settings */}
         <div style={ts.sec}>
           <button style={ts.secHdr} onClick={() => tog('page')}>
-            <span style={ts.secTtl}>📄 Page Settings</span>
+            <span style={ts.secTtl}>Page Settings</span>
             <span style={{ color:'#475569', transition:'transform 0.2s', transform: openSec.page?'rotate(180deg)':'none', display:'inline-block' }}>▾</span>
           </button>
           {openSec.page && (
@@ -561,13 +561,13 @@ const TemplateSelector = ({
         {/* export */}
         <div style={ts.sec}>
           <button style={ts.secHdr} onClick={() => tog('export')}>
-            <span style={ts.secTtl}>⬇ Export</span>
+            <span style={ts.secTtl}>Export</span>
             <span style={{ color:'#475569', transition:'transform 0.2s', transform: openSec.export?'rotate(180deg)':'none', display:'inline-block' }}>▾</span>
           </button>
           {openSec.export && (
             <div style={{ padding: '10px 16px 14px' }}>
               <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
-                {[{id:'pdf',label:'📄 PDF'},{id:'word',label:'📝 Word'},{id:'both',label:'⬇ Both'}].map(f => (
+                {[{id:'pdf',label:'PDF'},{id:'word',label:'Word'},{id:'both',label:'Both'}].map(f => (
                   <button key={f.id} onClick={() => setExportFormat(f.id)} style={{ flex: 1, padding: '6px 4px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: exportFormat===f.id?'#0d9488':'#1e293b', background: exportFormat===f.id?'#042f2e':'#0f172a', color: exportFormat===f.id?'#0d9488':'#64748b' }}>
                     {f.label}
                   </button>
@@ -577,23 +577,23 @@ const TemplateSelector = ({
               {/* info about backend */}
               {(exportFormat === 'pdf' || exportFormat === 'both') && (
                 <div style={{ fontSize: 9, color: '#475569', background: '#0a0e1a', border: '1px solid #1e293b', borderRadius: 6, padding: '6px 10px', marginBottom: 10, lineHeight: 1.5 }}>
-                  📡 PDF export calls <code style={{ color: '#0d9488', fontSize: 9 }}>POST /api/documents/export-pdf</code>. Falls back to browser if unavailable.
+                  PDF export runs locally in your browser for maximum privacy.
                 </div>
               )}
 
               <button onClick={handleExport} disabled={isExporting} style={{ width:'100%', background: isExporting ? '#1e293b' : 'linear-gradient(135deg,#0d9488,#0f766e)', color: isExporting?'#475569':'#fff', border:'none', borderRadius:8, padding:'10px 0', cursor: isExporting?'not-allowed':'pointer', fontSize:12, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:7, transition:'all 0.18s' }}>
-                {isExporting ? '⏳ Exporting…' : <><Download />{exportFormat==='pdf'?'Download PDF':exportFormat==='word'?'Download Word':'Download Both'}</>}
+                {isExporting ? 'Exporting…' : <><Download />{exportFormat==='pdf'?'Download PDF':exportFormat==='word'?'Download Word':'Download Both'}</>}
               </button>
 
               {exportFormat === 'both' && (
                 <div style={{ display:'flex', gap:5, marginBottom:7 }}>
-                  <button onClick={()=>onDownloadPDF?.()} disabled={pdfLoading} style={{ flex:1, padding:'7px 0', borderRadius:7, border:'1px solid #1e293b', background:'#0f172a', color:'#64748b', fontSize:10, fontWeight:600, cursor:'pointer' }}>{pdfLoading?'…':'📄 PDF only'}</button>
-                  <button onClick={()=>onDownloadWord?.()} disabled={wordLoading} style={{ flex:1, padding:'7px 0', borderRadius:7, border:'1px solid #1e293b', background:'#0f172a', color:'#64748b', fontSize:10, fontWeight:600, cursor:'pointer' }}>{wordLoading?'…':'📝 Word only'}</button>
+                  <button onClick={()=>onDownloadPDF?.()} disabled={pdfLoading} style={{ flex:1, padding:'7px 0', borderRadius:7, border:'1px solid #1e293b', background:'#0f172a', color:'#64748b', fontSize:10, fontWeight:600, cursor:'pointer' }}>{pdfLoading?'…':'PDF only'}</button>
+                  <button onClick={()=>onDownloadWord?.()} disabled={wordLoading} style={{ flex:1, padding:'7px 0', borderRadius:7, border:'1px solid #1e293b', background:'#0f172a', color:'#64748b', fontSize:10, fontWeight:600, cursor:'pointer' }}>{wordLoading?'…':'Word only'}</button>
                 </div>
               )}
 
               <button onClick={handleCopyLink} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:`1px solid ${copyDone?'#166534':'#1e293b'}`, background: copyDone?'#052e16':'#0f172a', color: copyDone?'#4ade80':'#64748b', fontSize:11, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 0.18s' }}>
-                {copyDone ? '✓ Link copied!' : '🔗 Copy Link'}
+                {copyDone ? '✓ Link copied!' : 'Copy Link'}
               </button>
             </div>
           )}

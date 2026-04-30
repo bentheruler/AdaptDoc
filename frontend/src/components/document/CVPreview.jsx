@@ -52,7 +52,7 @@ const buildOps = (data, onDataChange) => ({
 /* ══════════════════════════════════════════════════
    DISPATCHER
 ══════════════════════════════════════════════════ */
-const CVPreview = ({ data, onDataChange, theme, fontSize, accentColor, editMode }) => {
+const CVPreview = ({ data, onDataChange, theme, fontSize, fontFamily = 'Inter', spacing = 'normal', accentColor, editMode }) => {
   const nd = normalise(data);
   const accent = accentColor || '#1e3a5f';
   const fz = parseInt(fontSize) || 12;
@@ -67,7 +67,19 @@ const CVPreview = ({ data, onDataChange, theme, fontSize, accentColor, editMode 
     Chicago:    ChicagoCV,   Sunset:     SunsetCV,
   };
   const Comp = map[theme] || ModernCV;
-  return <Comp {...p} />;
+
+  const lineHeight = spacing === 'compact' ? 1.3 : spacing === 'relaxed' ? 1.8 : 1.5;
+
+  if (fontFamily) {
+    const url = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700&display=swap`;
+    loadFont(url);
+  }
+
+  return (
+    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight }}>
+      <Comp {...p} />
+    </div>
+  );
 };
 export default CVPreview;
 
@@ -91,25 +103,6 @@ const EList = ({ items, field, editMode, onUpdate, onRemove, onAdd, addLabel='Ad
         </div>
       ))}
       {editMode && <button onClick={()=>onAdd('New item')} style={{background:'transparent',border:'1px dashed #94a3b8',borderRadius:4,padding:'1px 8px',cursor:'pointer',fontSize:11,fontFamily:'inherit',color:'#64748b',marginTop:3}}>+ {addLabel}</button>}
-    </div>
-  );
-};
-
-/* Pill skills row */
-const PillSkills = ({ data, editMode, updateSkill, removeSkill, addSkill, pillSx={}, containerSx={} }) => {
-  if (!editMode && !data.skills.length) return null;
-  return (
-    <div style={{display:'flex',flexWrap:'wrap',gap:5,...containerSx}}>
-      {data.skills.map((s,i)=>(
-        <span key={i} style={{display:'inline-flex',alignItems:'center',gap:3}}>
-          {editMode
-            ? <><input value={s} onChange={e=>updateSkill(i,e.target.value)}
-                style={{background:'#fffbeb',border:'1px dashed #f59e0b',borderRadius:3,padding:'1px 5px',fontSize:11,fontFamily:'inherit',outline:'none',width:Math.max(44,s.length*7)}} />
-               <span onClick={()=>removeSkill(i)} style={{cursor:'pointer',color:'#ef4444',fontWeight:700,fontSize:11}}>×</span></>
-            : <span style={pillSx}>{s}</span>}
-        </span>
-      ))}
-      {editMode && <button onClick={addSkill} style={{background:'transparent',border:'1px dashed #94a3b8',borderRadius:3,padding:'1px 7px',cursor:'pointer',fontSize:11,fontFamily:'inherit',color:'#64748b'}}>+ Add</button>}
     </div>
   );
 };
@@ -142,11 +135,6 @@ const ExpBullets = ({ exp, idx, accent, fz, editMode, updateExp, updateBullet, a
     {editMode && <button onClick={()=>addBullet(idx)} style={{background:'transparent',border:`1px dashed ${accent}`,color:accent,borderRadius:4,padding:'1px 8px',cursor:'pointer',fontSize:11,fontFamily:'inherit',marginTop:4}}>+ bullet</button>}
   </div>
 );
-
-/* Section heading styles */
-const SH = {
-  modern:    (accent,fz)=>(<div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><div style={{width:3,height:16,background:accent,borderRadius:2}}/><span style={{fontSize:fz*0.72,fontWeight:700,letterSpacing:2,textTransform:'uppercase',color:accent}}>PLACEHOLDER</span></div>),
-};
 
 /* ══════════════════════════════════════════════════
    1. MODERN
@@ -530,7 +518,7 @@ function CreativeCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,re
           {(editMode||data.summary)&&<CR label="About Me"><EditableField value={data.summary} onChange={v=>update('summary',v)} editMode={editMode} multiline style={{fontSize:fz*0.88,color:'#444',lineHeight:1.65}} /></CR>}
           {(editMode||data.experience.length>0)&&<CR label="Experience">
             {data.experience.map((exp,i)=>(
-              <div key={i} style={{marginBottom:14,paddingLeft:10,borderLeft:`3px solid ${accent}30`,paddingBottom:i<data.experience.length-1?10:0,marginBottom:10}}>
+              <div key={i} style={{paddingLeft:10,borderLeft:`3px solid ${accent}30`,paddingBottom:i<data.experience.length-1?10:0,marginBottom:10}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
                   <EditableField value={exp.company} onChange={v=>updateExp(i,'company',v)} editMode={editMode} style={{fontWeight:700,fontSize:fz,color:'#1a1a2e'}} />
                   <EditableField value={exp.period}  onChange={v=>updateExp(i,'period',v)}  editMode={editMode} style={{fontSize:fz*0.76,color:'#999'}} />
@@ -764,7 +752,7 @@ function InfographicCV({ data,update,updateExp,updateBullet,updateSkill,addSkill
         {(editMode||data.summary)&&<IS label="About" icon="👤"><EditableField value={data.summary} onChange={v=>update('summary',v)} editMode={editMode} multiline style={{fontSize:fz*0.87,color:'#444',lineHeight:1.65}} /></IS>}
         {(editMode||data.experience.length>0)&&<IS label="Experience" icon="💼">
           {data.experience.map((exp,i)=>(
-            <div key={i} style={{marginBottom:14,paddingLeft:10,borderLeft:`3px solid ${accent}`,marginBottom:12}}>
+            <div key={i} style={{paddingLeft:10,borderLeft:`3px solid ${accent}`,marginBottom:12}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <EditableField value={exp.company} onChange={v=>updateExp(i,'company',v)} editMode={editMode} style={{fontWeight:600,fontSize:fz*0.96,color:'#111'}} />
                 <span style={{background:`${accent}18`,color:accent,borderRadius:20,padding:'1px 8px',fontSize:fz*0.72,fontWeight:600,whiteSpace:'nowrap'}}>{exp.period}</span>
@@ -1010,7 +998,7 @@ function SunsetCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remo
                 <EditableField value={exp.period}  onChange={v=>updateExp(i,'period',v)}  editMode={editMode} style={{fontSize:fz*0.76,color:'#f97316',fontWeight:500}} />
               </div>
               <EditableField value={exp.role} onChange={v=>updateExp(i,'role',v)} editMode={editMode} style={{fontSize:fz*0.84,color:accent,fontWeight:700,marginBottom:5,display:'block'}} />
-              <ExpBullets exp={exp} idx={i} accent={accent} fz={fz} editMode={editMode} updateExp={updateExp} updateBullet={updateBullet} addBullet={addBullet} removeBullet={removeBullet} bulletNode={<div style={{width:6,height:6,borderRadius:'50%',background:'linear-gradient(135deg,${accent},#f97316)',flexShrink:0,marginTop:4,background:accent}}/>} />
+              <ExpBullets exp={exp} idx={i} accent={accent} fz={fz} editMode={editMode} updateExp={updateExp} updateBullet={updateBullet} addBullet={addBullet} removeBullet={removeBullet} bulletNode={<div style={{width:6,height:6,borderRadius:'50%',background:`linear-gradient(135deg,${accent},#f97316)`,flexShrink:0,marginTop:4}}/>} />
             </div>
           ))}
         </SS>}

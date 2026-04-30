@@ -79,6 +79,14 @@ const TypingDots = () => (
 /* ══════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════ */
+const WELCOME = `Hi! I'm your AI editor. Tell me what you'd like to change and I'll update the document instantly.
+
+Try:
+• "Make the summary shorter"
+• "Change the tone to be more formal"
+• "Remove the secondary email"
+• "Strengthen my bullet points"`;
+
 const CustomizationPanel = ({
   cvData,
   onCVUpdate,
@@ -88,13 +96,6 @@ const CustomizationPanel = ({
   onProposalUpdate,
   docType = 'cv',
 }) => {
-  const WELCOME = `Hi! I'm your AI editor. Tell me what you'd like to change and I'll update the document instantly.
-
-Try:
-• "Make the summary shorter"
-• "Change the tone to be more formal"
-• "Remove the secondary email"
-• "Strengthen my bullet points"`;
 
   const [messages, setMessages] = useState([{ role: 'assistant', text: WELCOME }]);
   const [input, setInput] = useState('');

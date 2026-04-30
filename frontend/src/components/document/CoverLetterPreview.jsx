@@ -1,6 +1,16 @@
 // client/src/components/document/CoverLetterPreview.jsx
 import EditableField from '../common/EditableField';
 
+/* ─── Google Fonts loader ─── */
+const loadedFonts = new Set();
+const loadFont = (url) => {
+  if (loadedFonts.has(url)) return;
+  loadedFonts.add(url);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet'; link.href = url;
+  document.head.appendChild(link);
+};
+
 /* ══════════════════════════════════════════════════
    NORMALISE
 ══════════════════════════════════════════════════ */
@@ -27,7 +37,7 @@ const norm = (data = {}) => ({
 /* ══════════════════════════════════════════════════
    DISPATCHER
 ══════════════════════════════════════════════════ */
-const CoverLetterPreview = ({ data, onDataChange, theme, fontSize, accentColor, editMode }) => {
+const CoverLetterPreview = ({ data, onDataChange, theme, fontSize, fontFamily = 'Inter', spacing = 'normal', accentColor, editMode }) => {
   const nd     = norm(data);
   const accent = accentColor || '#1e3a5f';
   const fz     = parseInt(fontSize) || 12;
@@ -42,7 +52,19 @@ const CoverLetterPreview = ({ data, onDataChange, theme, fontSize, accentColor, 
     Chicago:     ChicagoCL,    Sunset:      SunsetCL,
   };
   const Comp = map[theme] || ModernCL;
-  return <Comp {...props} />;
+
+  const lineHeight = spacing === 'compact' ? 1.3 : spacing === 'relaxed' ? 1.8 : 1.5;
+
+  if (fontFamily) {
+    const url = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700&display=swap`;
+    loadFont(url);
+  }
+
+  return (
+    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight }}>
+      <Comp {...props} />
+    </div>
+  );
 };
 
 export default CoverLetterPreview;
@@ -236,8 +258,8 @@ function TechCL({ data, update, accent, fz, editMode }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: green }}>~/</span><EditableField value={data.senderName} onChange={v => update('senderName', v)} editMode={editMode} style={{ fontSize: fz * 1.6, fontWeight: 600, color: '#e6edf3' }} inputStyle={inputSx} /></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}><span style={{ color: muted }}>$</span><EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.84, color: green }} inputStyle={inputSx} /></div>
         <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: fz * 0.75, color: muted }}>
-          {(editMode || data.senderLocation) && <span>📍 {data.senderLocation}</span>}
-          {(editMode || data.senderEmail)    && <span>✉ {data.senderEmail}</span>}
+          {(editMode || data.senderLocation) && <span>loc: {data.senderLocation}</span>}
+          {(editMode || data.senderEmail)    && <span>eml: {data.senderEmail}</span>}
         </div>
       </div>
       <div style={{ padding: '20px 28px' }}>
@@ -342,9 +364,9 @@ function TimelineCL({ data, update, accent, fz, editMode }) {
           <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.78, color: accent, fontWeight: 600, display: 'block', marginTop: 4 }} />
         </div>
         <div style={{ fontSize: fz * 0.76, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {(editMode || data.senderLocation) && <span>📍 {data.senderLocation}</span>}
-          {(editMode || data.senderEmail)    && <span>✉ {data.senderEmail}</span>}
-          {(editMode || data.date)           && <span>📅 {data.date}</span>}
+          {(editMode || data.senderLocation) && <span>Loc: {data.senderLocation}</span>}
+          {(editMode || data.senderEmail)    && <span>Eml: {data.senderEmail}</span>}
+          {(editMode || data.date)           && <span>Date: {data.date}</span>}
         </div>
         {(editMode || data.recipientName) && <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: fz * 0.65, textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: 5 }}>To</div>
@@ -382,8 +404,8 @@ function InfographicCL({ data, update, accent, fz, editMode }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 14, marginTop: 12, flexWrap: 'wrap' }}>
-          {[['📍', data.senderLocation], ['✉', data.senderEmail], ['📅', data.date]].filter(([, v]) => editMode || v).map(([icon, v], i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 16, padding: '3px 10px', fontSize: fz * 0.75, color: '#fff' }}>{icon} {v}</div>
+          {[['Loc:', data.senderLocation], ['Eml:', data.senderEmail], ['Date:', data.date]].filter(([, v]) => editMode || v).map(([icon, v], i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 16, padding: '3px 10px', fontSize: fz * 0.75, color: '#fff' }}><span style={{ fontWeight: 600 }}>{icon}</span> {v}</div>
           ))}
         </div>
       </div>
@@ -499,8 +521,8 @@ function SunsetCL({ data, update, accent, fz, editMode }) {
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.65, fontWeight: 700, color: '#fff', display: 'block', lineHeight: 1.1 }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
         <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.82, color: 'rgba(255,255,255,0.85)', fontWeight: 500, marginTop: 5, display: 'block' }} />
         <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
-          {[['📍', data.senderLocation], ['✉', data.senderEmail]].filter(([, v]) => editMode || v).map(([icon, v], i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '3px 10px', fontSize: fz * 0.75, color: '#fff' }}>{icon} {v}</div>
+          {[['Loc:', data.senderLocation], ['Eml:', data.senderEmail]].filter(([, v]) => editMode || v).map(([icon, v], i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '3px 10px', fontSize: fz * 0.75, color: '#fff' }}><span style={{ fontWeight: 600 }}>{icon}</span> {v}</div>
           ))}
         </div>
       </div>
