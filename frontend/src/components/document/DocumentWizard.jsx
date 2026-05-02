@@ -53,7 +53,11 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
     // Call AI just for this section using the global AI hook
     // We pass the current data as context
     try {
-      const res = await fetch('/api/ai/chat-edit', { // use generic fetch or axios if hook not perfect
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+      const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
+
+      const res = await fetch(`${API_BASE}/api/ai/chat-edit`, { // use generic fetch or axios if hook not perfect
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
         body: JSON.stringify({

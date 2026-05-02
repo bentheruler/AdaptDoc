@@ -5,7 +5,7 @@ const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || host
 
 const API_BASE = isLocalhost
   ? `http://${hostname}:5000`
-  : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
+  : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
 const api = axios.create({
   baseURL: `${API_BASE}/api`,

@@ -36,6 +36,12 @@ const sendVerificationEmail = async (user, token) => {
   const transporter = createTransporter();
   const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
+  // Log the URL for local testing since email might not be configured yet
+  console.log('----------------------------------------');
+  console.log(`Email verification link for ${user.email}:`);
+  console.log(verifyUrl);
+  console.log('----------------------------------------');
+
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to: user.email,
@@ -139,6 +145,7 @@ router.post('/register', async (req, res) => {
       await sendVerificationEmail(user, verificationToken);
     } catch (mailError) {
       console.error('Verification email failed:', mailError.message);
+      return res.status(500).json({ message: 'User registered, but failed to send verification email. Please try again later.' });
     }
 
     res.status(201).json({
@@ -184,6 +191,7 @@ router.post('/resend-verification', async (req, res) => {
       await sendVerificationEmail(user, verificationToken);
     } catch (mailError) {
       console.error('Resend verification email failed:', mailError.message);
+      return res.status(500).json({ message: 'Failed to send verification email. Please try again later.' });
     }
 
     res.json({
@@ -450,6 +458,7 @@ router.post('/forgot-password', async (req, res) => {
         await sendPasswordResetEmail(user, resetToken);
       } catch (mailError) {
         console.error('Password reset email failed:', mailError.message);
+        return res.status(500).json({ message: 'Failed to send password reset email. Please check your email configuration or try again later.' });
       }
     }
 
