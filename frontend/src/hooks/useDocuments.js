@@ -4,19 +4,30 @@ import axios from 'axios';
 
 const hostname = window.location.hostname;
 const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
-const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
+const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
 const getToken = () =>
   localStorage.getItem('accessToken') ||
   localStorage.getItem('token') ||
   sessionStorage.getItem('accessToken');
 
-export const useDocuments = () => {
-  const [documents, setDocuments] = useState([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
+let cachedDocuments = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  const loadDocuments = useCallback(async () => {
+export const useDocuments = () => {
+  const [documents, setDocuments] = useState(cachedDocuments || []);
+  const [loadingDocuments, setLoadingDocuments] = useState(!cachedDocuments);
+
+  const loadDocuments = useCallback(async (force = false) => {
     try {
+      // Use cache if available and not expired, unless forced
+      if (!force && cachedDocuments && Date.now() - lastFetchTime < CACHE_DURATION) {
+        setDocuments(cachedDocuments);
+        setLoadingDocuments(false);
+        return;
+      }
+
       setLoadingDocuments(true);
 
       const res = await axios.get(`${API_BASE}/api/documents`, {
@@ -26,6 +37,8 @@ export const useDocuments = () => {
       });
 
       const docs = Array.isArray(res.data) ? res.data : [];
+      cachedDocuments = docs;
+      lastFetchTime = Date.now();
       setDocuments(docs);
     } catch (error) {
       if (error.response?.status === 401) {
@@ -53,7 +66,9 @@ export const useDocuments = () => {
         },
       });
 
-      setDocuments((prev) => [res.data, ...prev]);
+      const newDocs = [res.data, ...documents];
+      cachedDocuments = newDocs;
+      setDocuments(newDocs);
       return res.data;
     } catch (error) {
       console.error('Failed to save document:', error.response?.data || error.message);
@@ -71,9 +86,9 @@ export const useDocuments = () => {
         },
       });
 
-      setDocuments((prev) =>
-        prev.map((doc) => ((doc._id || doc.id) === id ? res.data : doc))
-      );
+      const updatedDocs = documents.map((doc) => ((doc._id || doc.id) === id ? res.data : doc));
+      cachedDocuments = updatedDocs;
+      setDocuments(updatedDocs);
 
       return res.data;
     } catch (error) {
@@ -91,7 +106,9 @@ export const useDocuments = () => {
         },
       });
 
-      setDocuments((prev) => prev.filter((doc) => (doc._id || doc.id) !== id));
+      const filteredDocs = documents.filter((doc) => (doc._id || doc.id) !== id);
+      cachedDocuments = filteredDocs;
+      setDocuments(filteredDocs);
       return true;
     } catch (error) {
       console.error('Failed to delete document:', error.response?.data || error.message);

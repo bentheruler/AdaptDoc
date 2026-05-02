@@ -286,6 +286,7 @@ router.post('/login', async (req, res) => {
         status: user.status,
         isVerified: user.isVerified,
         settings: user.settings,
+        profileData: user.profileData,
       },
     });
   } catch (error) {
@@ -382,8 +383,8 @@ router.post('/google-login', async (req, res) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        isVerified: user.isVerified,
         settings: user.settings,
+        profileData: user.profileData,
         avatar: user.avatar || null, // include avatar in login response
       },
     });

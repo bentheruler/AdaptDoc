@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 
 
 const SparkleIcon = () => (
@@ -10,6 +11,7 @@ const SparkleIcon = () => (
 const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, onNextStep }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [localAiLoading, setLocalAiLoading] = useState(false);
+  const toast = useToast();
 
   const getSteps = () => {
     if (docType === 'cv') {
@@ -55,7 +57,7 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
     try {
       const hostname = window.location.hostname;
       const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
-      const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
+      const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
       const res = await fetch(`${API_BASE}/api/ai/chat-edit`, { // use generic fetch or axios if hook not perfect
         method: 'POST',
@@ -66,11 +68,19 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
         })
       });
       const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.message || 'AI generation failed');
+      }
+      
       if (result.updatedDocument && result.updatedDocument[field.key]) {
         handleFieldChange(field.key, result.updatedDocument[field.key]);
+        toast('AI Generation successful!', 'success');
+      } else {
+        throw new Error('No content generated');
       }
     } catch (e) {
       console.error(e);
+      toast(e.message || 'AI Generation failed', 'error');
     } finally {
       setLocalAiLoading(false);
     }

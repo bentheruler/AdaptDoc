@@ -9,7 +9,7 @@ const hostname = window.location.hostname;
 const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
 const API_BASE = isLocalhost
   ? `http://${hostname}:5000`
-  : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
+  : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

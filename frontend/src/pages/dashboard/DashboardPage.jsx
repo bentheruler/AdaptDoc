@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
-import { useReactToPrint } from 'react-to-print';
+import html2pdf from 'html2pdf.js';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -371,27 +371,27 @@ const DashboardPage = () => {
 
   // Pre-fill data with the logged-in user's info so templates are never empty by default
   const [cvData, setCvData] = useState({
-    name: user?.name || '',
-    phone: '',
-    email1: user?.email || '',
-    email2: '',
-    linkedin: '',
-    title: '',
-    location: '',
-    summary: '',
-    skills: [],
-    education: [],
-    experience: [],
-    projects: [],
-    certifications: [],
-    references: '',
+    name: user?.profileData?.name || user?.name || '',
+    phone: user?.profileData?.phone || '',
+    email1: user?.profileData?.email1 || user?.profileData?.email || user?.email || '',
+    email2: user?.profileData?.email2 || '',
+    linkedin: user?.profileData?.linkedin || '',
+    title: user?.profileData?.title || '',
+    location: user?.profileData?.location || '',
+    summary: user?.profileData?.summary || '',
+    skills: user?.profileData?.skills || [],
+    education: user?.profileData?.education || [],
+    experience: user?.profileData?.experience || [],
+    projects: user?.profileData?.projects || [],
+    certifications: user?.profileData?.certifications || [],
+    references: user?.profileData?.references || '',
   });
 
   const [coverLetterData, setCoverLetterData] = useState({
-    senderName: user?.name || '',
-    senderTitle: '',
-    senderLocation: '',
-    senderEmail: user?.email || '',
+    senderName: user?.profileData?.senderName || user?.profileData?.name || user?.name || '',
+    senderTitle: user?.profileData?.senderTitle || user?.profileData?.title || '',
+    senderLocation: user?.profileData?.senderLocation || user?.profileData?.location || '',
+    senderEmail: user?.profileData?.senderEmail || user?.profileData?.email1 || user?.email || '',
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     recipientName: '',
     recipientTitle: '',
@@ -404,13 +404,13 @@ const DashboardPage = () => {
     body3: '',
     closing: '',
     signoff: 'Sincerely,',
-    signature: user?.name || '',
+    signature: user?.profileData?.name || user?.name || '',
   });
 
   const [proposalData, setProposalData] = useState({
     title: '',
     subtitle: 'Technical Proposal',
-    preparedBy: user?.name || '',
+    preparedBy: user?.profileData?.preparedBy || user?.profileData?.name || user?.name || '',
     preparedFor: '',
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     version: 'v1.0',
@@ -422,8 +422,8 @@ const DashboardPage = () => {
     budget: '',
     validity: '',
     closingNote: '',
-    contactName: user?.name || '',
-    contactEmail: user?.email || '',
+    contactName: user?.profileData?.contactName || user?.profileData?.name || user?.name || '',
+    contactEmail: user?.profileData?.contactEmail || user?.profileData?.email1 || user?.email || '',
   });
 
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -553,19 +553,34 @@ const DashboardPage = () => {
     setCreateStep('preview');
   };
 
-  const reactToPrintFn = useReactToPrint({
-    contentRef: previewRef,
-    documentTitle: `${docType}_document`,
-    onBeforeGetContent: () => {
-      setPdfLoading(true);
-      return new Promise(resolve => setTimeout(resolve, 150));
-    },
-    onAfterPrint: () => { setPdfLoading(false); toast('PDF exported!', 'success'); },
-    onPrintError: () => { setPdfLoading(false); toast('PDF export failed', 'error'); },
-  });
-
   const handleDownloadPDF = async () => {
-    reactToPrintFn();
+    try {
+      setPdfLoading(true);
+      if (!previewRef.current) throw new Error('Preview not found');
+
+      const element = previewRef.current;
+      
+      let filename = 'document';
+      if (docType === 'cv') filename = cvData.name ? `${cvData.name}_CV` : 'CV';
+      else if (docType === 'cover_letter') filename = coverLetterData.senderName ? `${coverLetterData.senderName}_Cover_Letter` : 'Cover_Letter';
+      else if (docType === 'business_proposal') filename = proposalData.title ? `${proposalData.title}_Proposal` : 'Proposal';
+
+      const opt = {
+        margin:       0,
+        filename:     `${filename.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: paperSize === 'Letter' ? 'letter' : 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      toast('PDF exported successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('PDF export failed', 'error');
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const handleDownloadWord = async () => {

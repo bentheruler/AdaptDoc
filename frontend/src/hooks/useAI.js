@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { generateDocumentAI } from '../services/aiService';
+import { useToast } from '../context/ToastContext';
 
 export const useAI = () => {
   const [aiLoading, setAiLoading] = useState(false);
+  const toast = useToast();
 
   /**
    * handleGenerate — calls the /api/ai/generate endpoint and maps the response
@@ -57,11 +59,12 @@ export const useAI = () => {
         }));
       }
 
+      toast('Full AI document generation successful!', 'success');
       return res;
     } catch (error) {
       console.error('AI generation failed:', error.response?.data || error.message || error);
       const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'AI generation failed';
-      alert(msg);
+      toast(msg, 'error');
       return null;
     } finally {
       setAiLoading(false);

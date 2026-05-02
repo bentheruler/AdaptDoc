@@ -1,4 +1,5 @@
 const Document = require('../../models/Document');
+const User = require('../../models/User');
 
 // CREATE DOCUMENT
 exports.createDocument = async (req, res) => {
@@ -11,6 +12,21 @@ exports.createDocument = async (req, res) => {
     });
 
     await document.save();
+
+    if (req.body.content) {
+      const user = await User.findById(req.user.id);
+      if (user) {
+        if (!user.profileData) user.profileData = {};
+        for (const [key, value] of Object.entries(req.body.content)) {
+          if (value && (!Array.isArray(value) || value.length > 0)) {
+            user.profileData[key] = value;
+          }
+        }
+        user.markModified('profileData');
+        await user.save();
+      }
+    }
+
     res.status(201).json(document);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -70,6 +86,21 @@ exports.updateDocument = async (req, res) => {
     doc.type = req.body.type ?? doc.type;
 
     await doc.save();
+
+    if (req.body.content) {
+      const user = await User.findById(req.user.id);
+      if (user) {
+        if (!user.profileData) user.profileData = {};
+        for (const [key, value] of Object.entries(req.body.content)) {
+          if (value && (!Array.isArray(value) || value.length > 0)) {
+            user.profileData[key] = value;
+          }
+        }
+        user.markModified('profileData');
+        await user.save();
+      }
+    }
+
     res.json(doc);
   } catch (err) {
     res.status(500).json({ error: err.message });

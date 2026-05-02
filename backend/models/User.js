@@ -72,6 +72,11 @@ const userSchema = new mongoose.Schema(
       }
     },
 
+    profileData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+
     // Profile picture — base64 data URL or external URL (e.g. from Google OAuth)
     avatar: {
       type: String,
