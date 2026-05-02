@@ -70,7 +70,7 @@ const LandingPage = () => {
     <div className="landing-page">
       <header className="landing-header">
         <div className="landing-brand-wrap">
-          <div className="landing-brand-mark">A</div>
+          <img src="/favicon.png" alt="AdaptDoc" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <div className="landing-brand">AdaptDoc</div>
         </div>
 
@@ -276,7 +276,10 @@ const LandingPage = () => {
   <div className="landing-footer-inner">
 
     <div className="footer-brand">
-      <div className="footer-logo">AdaptDoc</div>
+      <div className="footer-logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img src="/favicon.png" alt="AdaptDoc Logo" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+        AdaptDoc
+      </div>
       <p>
         Create CVs, cover letters, and business documents faster with a
         structured and AI-assisted workflow.
@@ -297,11 +300,11 @@ const LandingPage = () => {
         <Link to="/register">Get Started</Link>
       </div>
 
-      {/* <div className="footer-col">
+      <div className="footer-col">
         <h4>Other</h4>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-      </div> */}
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/terms">Terms</Link>
+      </div>
     </div>
 
   </div>

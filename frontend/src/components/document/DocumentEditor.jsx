@@ -1,44 +1,62 @@
-// client/src/components/document/DocumentEditor.jsx
 import { useState } from 'react';
 import { CATEGORIES } from '../../constants';
 
-const DocumentEditor = ({ category, onCategoryChange, editMode, onToggleEditMode, onSaveDraft }) => {
-  const [saveFeedback, setSaveFeedback] = useState(false);
+const DocumentEditor = ({ category, onCategoryChange, onSaveDraft }) => {
+  const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     onSaveDraft();
-    setSaveFeedback(true);
-    setTimeout(() => setSaveFeedback(false), 2000);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 20, background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '10px 24px', flexShrink: 0 }}>
-      <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-        Dashboard /&nbsp;<span style={{ color: '#1e3a5f', fontWeight: 600 }}>Editing Document</span>
-      </span>
-      <div style={{ flex: 1 }} />
-
-      {/* Category selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>Category</span>
-        <select
-          value={category}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          style={{ padding: '6px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 12, color: '#1e293b', cursor: 'pointer', minWidth: 120 }}
-        >
-          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+    <div style={s.bar}>
+      <div style={s.left}>
+        <span style={s.label}>Document Type</span>
+        <select value={category} onChange={e => onCategoryChange(e.target.value)} style={s.select}>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
 
-      {/* Save draft */}
-      <button
-        onClick={handleSave}
-        style={{ background: saveFeedback ? '#16a34a' : '#1e3a5f', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 18px', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: 6 }}
-      >
-        {saveFeedback ? '✅ Saved!' : '💾 Save Draft'}
+      <button onClick={handleSave} style={{ ...s.saveBtn, ...(saved ? s.savedBtn : {}) }}>
+        {saved ? (
+          <><span>✓</span> Saved!</>
+        ) : (
+          <><svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+          </svg> Save Draft</>
+        )}
       </button>
     </div>
   );
+};
+
+const s = {
+  bar: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    gap: 16, background: 'var(--surface)',
+    borderBottom: '1px solid var(--border-color)',
+    padding: '10px 20px', flexShrink: 0,
+  },
+  left: { display: 'flex', alignItems: 'center', gap: 10 },
+  label: { fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' },
+  select: {
+    padding: '6px 10px', borderRadius: 8,
+    border: '1px solid var(--border-color)',
+    background: 'var(--card-bg)', fontSize: 12,
+    color: 'var(--text-primary)', cursor: 'pointer',
+    outline: 'none', minWidth: 130, fontFamily: 'inherit',
+  },
+  saveBtn: {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    background: 'var(--accent-color)', color: '#fff',
+    border: 'none', borderRadius: 8, padding: '7px 16px',
+    cursor: 'pointer', fontSize: 12, fontWeight: 600,
+    whiteSpace: 'nowrap', transition: 'all 0.25s', fontFamily: 'inherit',
+  },
+  savedBtn: { background: '#0d9488' },
 };
 
 export default DocumentEditor;

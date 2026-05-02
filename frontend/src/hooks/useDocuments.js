@@ -2,7 +2,9 @@
 import { useCallback, useState } from 'react';
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const hostname = window.location.hostname;
+const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
 
 const getToken = () =>
   localStorage.getItem('accessToken') ||
@@ -26,6 +28,15 @@ export const useDocuments = () => {
       const docs = Array.isArray(res.data) ? res.data : [];
       setDocuments(docs);
     } catch (error) {
+      if (error.response?.status === 401) {
+        // Stale token — clear storage and force re-login
+        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return;
+      }
       console.error('Failed to load documents:', error.response?.data || error.message);
       setDocuments([]);
     } finally {

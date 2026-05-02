@@ -3,7 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
@@ -249,7 +252,7 @@ router.post('/login', async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '7d' }
     );
 
     const refreshToken = jwt.sign(
@@ -275,6 +278,108 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/* ─────────────────────────────────────────────
+   GOOGLE LOGIN
+───────────────────────────────────────────── */
+router.post('/google-login', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'No Google token provided' });
+    }
+
+    let email, name, picture;
+    
+    // Try to parse as an ID token first
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email   = payload.email;
+      name    = payload.name;
+      picture = payload.picture; // Google profile picture URL
+    } catch (err) {
+      // If it fails, assume it's an access token and fetch from Google UserInfo endpoint
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        throw new Error('Invalid Google token');
+      }
+      const data = await response.json();
+      email   = data.email;
+      name    = data.name;
+      picture = data.picture; // Google profile picture URL
+    }
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Google token does not contain an email' });
+    }
+    
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    if (!user) {
+      // New user — create with Google profile picture
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+      
+      user = new User({
+        name: name || 'Google User',
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        isVerified: true,
+        avatar: picture || null,
+      });
+      await user.save();
+    } else {
+      // Existing user — update isVerified and refresh avatar if not already set
+      let changed = false;
+      if (!user.isVerified) { user.isVerified = true; changed = true; }
+      if (picture && !user.avatar) { user.avatar = picture; changed = true; }
+      if (changed) await user.save();
+      
+      if (user.status === 'restricted') {
+        return res.status(403).json({ message: 'Account is restricted' });
+      }
+    }
+    
+    const accessToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        isVerified: user.isVerified,
+        settings: user.settings,
+        avatar: user.avatar || null, // include avatar in login response
+      },
+    });
+
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'Google authentication failed' });
+  }
+});
+
 
 /* ─────────────────────────────────────────────
    GET CURRENT USER

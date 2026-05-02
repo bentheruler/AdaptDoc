@@ -61,7 +61,7 @@ const CoverLetterPreview = ({ data, onDataChange, theme, fontSize, fontFamily = 
   }
 
   return (
-    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight }}>
+    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight, display: "flex", flexDirection: "column", flex: 1, minHeight: "100%" }}>
       <Comp {...props} />
     </div>
   );
@@ -119,7 +119,7 @@ const SubjectLine = ({ data, update, editMode, fz, accent, style = {} }) => (
 ══════════════════════════════════════════════════ */
 function ModernCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Lato',sans-serif", fontSize: fz, background: '#fff', padding: '44px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.7 }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '44px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.7 }}>
       <div style={{ marginBottom: 28, borderBottom: `2px solid ${accent}`, paddingBottom: 16 }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.6, fontWeight: 700, color: accent, display: 'block', letterSpacing: '-0.3px' }} />
         <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.88, color: '#666', display: 'block', marginTop: 3 }} />
@@ -141,7 +141,7 @@ function ModernCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function ClassicCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'EB Garamond',Georgia,serif", fontSize: fz, background: '#fffef9', padding: '44px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.75 }}>
+    <div style={{  fontSize: fz, background: '#fffef9', padding: '44px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.75 }}>
       <div style={{ textAlign: 'center', borderBottom: `1.5px solid ${accent}`, paddingBottom: 16, marginBottom: 24 }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 2, fontWeight: 400, color: '#1a1a1a', display: 'block', letterSpacing: '2px', fontVariant: 'small-caps' }} />
         <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.9, color: '#666', fontStyle: 'italic', display: 'block', marginTop: 4 }} />
@@ -163,7 +163,7 @@ function ClassicCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function MinimalCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: fz, background: '#fafafa', padding: '52px 56px', minHeight: 620, color: '#111', lineHeight: 1.8 }}>
+    <div style={{  fontSize: fz, background: '#fafafa', padding: '52px 56px', minHeight: 620, color: '#111', lineHeight: 1.8 }}>
       <div style={{ marginBottom: 40 }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 200, color: '#111', letterSpacing: '-1.5px', display: 'block', lineHeight: 1 }} />
         <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -192,10 +192,10 @@ function MinimalCL({ data, update, accent, fz, editMode }) {
 function BoldCL({ data, update, accent, fz, editMode }) {
   const dark = '#0f172a';
   return (
-    <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
       <div style={{ background: dark, padding: '26px 36px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: accent }} />
-        <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 2, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1, display: 'block', fontFamily: "'Barlow Condensed','Barlow',sans-serif" }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.4)' }} />
+        <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 2, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1, display: 'block', }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.4)' }} />
         <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 22, height: 3, background: accent, borderRadius: 2 }} />
           <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.86, color: accent, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }} inputStyle={{ color: accent }} />
@@ -221,7 +221,7 @@ function BoldCL({ data, update, accent, fz, editMode }) {
 function ExecutiveCL({ data, update, accent, fz, editMode }) {
   const gold = accent;
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: fz, background: '#fdfcf8', padding: '48px 52px', minHeight: 620, color: '#1a1510', lineHeight: 1.8 }}>
+    <div style={{  fontSize: fz, background: '#fdfcf8', padding: '48px 52px', minHeight: 620, color: '#1a1510', lineHeight: 1.8 }}>
       <div style={{ marginBottom: 32 }}>
         <EditableField value={data.senderName} onChange={v => update('senderName', v)} editMode={editMode} style={{ fontSize: fz * 2.4, fontWeight: 300, color: '#1a1510', letterSpacing: '4px', textTransform: 'uppercase', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, margin: '10px 0' }}>
@@ -251,9 +251,9 @@ function ExecutiveCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function TechCL({ data, update, accent, fz, editMode }) {
   const bg='#0d1117'; const bg2='#161b22'; const border='#30363d'; const green=accent; const muted='#8b949e';
-  const inputSx = { background: 'rgba(255,255,255,0.05)', border: `1px dashed ${green}60`, borderRadius: 3, color: '#e6edf3', fontFamily: "'Fira Code',monospace", outline: 'none', padding: '2px 6px' };
+  const inputSx = { background: 'rgba(255,255,255,0.05)', border: `1px dashed ${green}60`, borderRadius: 3, color: '#e6edf3',  outline: 'none', padding: '2px 6px' };
   return (
-    <div style={{ fontFamily: "'Fira Code',Consolas,monospace", fontSize: fz, background: bg, minHeight: 620, color: '#e6edf3', lineHeight: 1.7 }}>
+    <div style={{  fontSize: fz, background: bg, minHeight: 620, color: '#e6edf3', lineHeight: 1.7 }}>
       <div style={{ background: bg2, borderBottom: `1px solid ${border}`, padding: '22px 28px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: green }}>~/</span><EditableField value={data.senderName} onChange={v => update('senderName', v)} editMode={editMode} style={{ fontSize: fz * 1.6, fontWeight: 600, color: '#e6edf3' }} inputStyle={inputSx} /></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}><span style={{ color: muted }}>$</span><EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.84, color: green }} inputStyle={inputSx} /></div>
@@ -281,7 +281,7 @@ function TechCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function CreativeCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.7, position: 'relative', overflow: 'hidden' }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.7, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, borderRadius: '50%', background: `${accent}10`, pointerEvents: 'none' }} />
       <div style={{ background: `linear-gradient(135deg,${accent},${accent}cc)`, padding: '28px 36px', clipPath: 'polygon(0 0,100% 0,100% 80%,0 100%)', marginBottom: 8 }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.7, fontWeight: 800, color: '#fff', display: 'block', lineHeight: 1.1 }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -309,7 +309,7 @@ function CreativeCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function AcademicCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Source Serif 4',Georgia,serif", fontSize: fz, background: '#fff', padding: '40px 48px', minHeight: 620, color: '#111', lineHeight: 1.75 }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '40px 48px', minHeight: 620, color: '#111', lineHeight: 1.75 }}>
       <div style={{ borderBottom: `2px solid ${accent}`, paddingBottom: 14, marginBottom: 22 }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.7, fontWeight: 600, color: '#111', display: 'block' }} />
         <EditableField value={data.senderTitle} onChange={v => update('senderTitle', v)} editMode={editMode} style={{ fontSize: fz * 0.88, color: accent, display: 'block', marginTop: 3, fontStyle: 'italic' }} />
@@ -331,7 +331,7 @@ function AcademicCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function CorporateCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Roboto',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
       <div style={{ background: accent, padding: '18px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.5, fontWeight: 700, color: '#fff', display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -357,7 +357,7 @@ function CorporateCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function TimelineCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Mulish',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, display: 'flex', lineHeight: 1.65 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, display: 'flex', lineHeight: 1.65 }}>
       <div style={{ width: '28%', background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ paddingBottom: 14, borderBottom: `2px solid ${accent}` }}>
           <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.2, fontWeight: 700, color: '#111', display: 'block', lineHeight: 1.2 }} />
@@ -391,7 +391,7 @@ function TimelineCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function InfographicCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.65 }}>
       <div style={{ background: accent, padding: '22px 32px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -426,7 +426,7 @@ function InfographicCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function NordicCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: fz, background: '#fff', padding: '52px 56px', minHeight: 620, color: '#111', lineHeight: 1.85 }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '52px 56px', minHeight: 620, color: '#111', lineHeight: 1.85 }}>
       <div style={{ marginBottom: 44 }}>
         <EditableField value={data.senderName} onChange={v => update('senderName', v)} editMode={editMode} style={{ fontSize: fz * 2.6, fontWeight: 200, color: '#111', letterSpacing: '-2px', lineHeight: 1, display: 'block' }} />
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -453,7 +453,7 @@ function NordicCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function ElegantCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Libre Baskerville',Georgia,serif", fontSize: fz, background: '#fff', padding: '48px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.8 }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '48px 52px', minHeight: 620, color: '#1a1a1a', lineHeight: 1.8 }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <EditableField value={data.senderName} onChange={v => update('senderName', v)} editMode={editMode} style={{ fontSize: fz * 2, fontWeight: 700, color: '#1a1a1a', letterSpacing: '4px', textTransform: 'uppercase', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '10px 0' }}>
@@ -487,7 +487,7 @@ function ElegantCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function ChicagoCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: fz, background: '#fafaf8', minHeight: 620, border: '2px solid #111', lineHeight: 1.75 }}>
+    <div style={{  fontSize: fz, background: '#fafaf8', minHeight: 620, border: '2px solid #111', lineHeight: 1.75 }}>
       <div style={{ borderBottom: '3px solid #111', padding: '16px 28px', textAlign: 'center' }}>
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 900, color: '#111', letterSpacing: '-0.5px', display: 'block', lineHeight: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0' }}><div style={{ flex: 1, height: '1px', background: '#111' }} /><span style={{ fontSize: 11 }}>◆</span><div style={{ flex: 1, height: '1px', background: '#111' }} /></div>
@@ -515,7 +515,7 @@ function ChicagoCL({ data, update, accent, fz, editMode }) {
 ══════════════════════════════════════════════════ */
 function SunsetCL({ data, update, accent, fz, editMode }) {
   return (
-    <div style={{ fontFamily: "'Quicksand',sans-serif", fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.7 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 620, lineHeight: 1.7 }}>
       <div style={{ background: `linear-gradient(135deg,${accent} 0%,#f97316 100%)`, padding: '26px 36px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -20, bottom: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
         <EditableField value={data.senderName}  onChange={v => update('senderName',  v)} editMode={editMode} style={{ fontSize: fz * 1.65, fontWeight: 700, color: '#fff', display: 'block', lineHeight: 1.1 }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />

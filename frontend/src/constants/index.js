@@ -118,7 +118,7 @@ export const THEME_LIST = [
 
 export const CATEGORIES    = ['CV', 'Cover Letter', 'Proposal'];
 export const FONT_SIZES    = ['10 pt', '11 pt', '12 pt', '14 pt'];
-export const COLOR_SCHEMES = ['#1e3a5f', '#3b82f6', '#6366f1', '#0f766e', '#64748b', '#94a3b8', '#cbd5e1'];
+export const COLOR_SCHEMES = ['#1e3a5f', '#14b8a6', '#0891b2', '#0f766e', '#64748b', '#94a3b8', '#cbd5e1'];
 
 export const SIDEBAR_ITEMS = [
   { id: 'home',      icon: '⊞', label: 'Dashboard'      },

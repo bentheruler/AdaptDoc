@@ -1,15 +1,25 @@
 import axios from 'axios';
 
-const API_BASE =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : process.env.REACT_APP_API_URL || 'https://adaptdoc.onrender.com';
+const hostname = window.location.hostname;
+const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+
+const API_BASE = isLocalhost
+  ? `http://${hostname}:5000`
+  : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
 
 const api = axios.create({
   baseURL: `${API_BASE}/api`,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Longer timeout for auth (Google OAuth UserInfo calls can be slow)
+const authApi = axios.create({
+  baseURL: `${API_BASE}/api`,
+  timeout: 30000,
+  headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
@@ -24,13 +34,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-
-
+authApi.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem('accessToken') ||
+    localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 
 export const register = (userData) => api.post('/auth/register', userData);
 
 export const login = (userData) => api.post('/auth/login', userData);
+
+export const googleLogin = (token) => authApi.post('/auth/google-login', { token });
 
 export const verifyEmail = (token) =>
   api.get(`/auth/verify-email/${token}`);

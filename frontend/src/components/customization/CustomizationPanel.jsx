@@ -97,7 +97,15 @@ const CustomizationPanel = ({
   docType = 'cv',
 }) => {
 
-  const [messages, setMessages] = useState([{ role: 'assistant', text: WELCOME }]);
+  const storageKey = `adapt_doc_ai_chat_${docType}`;
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [{ role: 'assistant', text: WELCOME }];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [updateCount, setUpdateCount] = useState(0);
@@ -110,9 +118,24 @@ const CustomizationPanel = ({
   }, [messages, loading]);
 
   useEffect(() => {
-    setMessages([{ role: 'assistant', text: WELCOME }]);
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch (e) {}
+  }, [messages, storageKey]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        setMessages([{ role: 'assistant', text: WELCOME }]);
+      }
+    } catch (e) {
+      setMessages([{ role: 'assistant', text: WELCOME }]);
+    }
     setInput('');
-  }, [docType]);
+  }, [docType, storageKey]);
 
   const currentData =
     docType === 'cv'
@@ -222,14 +245,15 @@ const CustomizationPanel = ({
 
       <div style={s.chipZone}>
         <div style={s.chipLabel}>Quick actions</div>
-        <div style={s.chipRow}>
+        {/* Horizontal scrollable single-line chip strip */}
+        <div className="chip-slider" style={s.chipRow}>
           {quickActions.map((a) => (
             <button
               key={a.label}
               type="button"
               onClick={() => send(a.prompt)}
               disabled={loading}
-              style={{ ...s.chip, ...(loading ? s.chipDisabled : {}) }}
+              style={{ ...s.chip, ...(loading ? s.chipDisabled : {}), flexShrink: 0 }}
             >
               {a.label}
             </button>
@@ -327,9 +351,10 @@ const CustomizationPanel = ({
 const s = {
   wrap: {
     height: '100%',
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    background: '#fff',
+    background: 'transparent',
     fontFamily: "'Inter','Segoe UI',sans-serif",
     overflow: 'hidden',
   },
@@ -339,7 +364,7 @@ const s = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '14px 16px 12px',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid var(--border-color)',
     flexShrink: 0,
   },
   headerLeft: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -354,35 +379,44 @@ const s = {
     color: '#fff',
     flexShrink: 0,
   },
-  headerTitle: { fontSize: 13, fontWeight: 700, color: '#0f172a' },
-  headerSub: { fontSize: 10, color: '#94a3b8', marginTop: 1 },
+  headerTitle: { fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' },
+  headerSub: { fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 },
   updateBadge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
     fontSize: 10,
     fontWeight: 700,
-    color: '#16a34a',
-    background: '#f0fdf4',
-    border: '1px solid #bbf7d0',
+    color: '#14b8a6',
+    background: 'rgba(20,184,166,0.1)',
+    border: '1px solid rgba(20,184,166,0.3)',
     padding: '3px 8px',
     borderRadius: 20,
   },
 
   chipZone: {
-    padding: '10px 14px 8px',
-    borderBottom: '1px solid #f1f5f9',
+    padding: '8px 14px 6px',
+    borderBottom: '1px solid var(--border-color)',
     flexShrink: 0,
   },
   chipLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 700,
     color: '#94a3b8',
     textTransform: 'uppercase',
     letterSpacing: '0.07em',
-    marginBottom: 7,
+    marginBottom: 5,
   },
-  chipRow: { display: 'flex', flexWrap: 'wrap', gap: 5 },
+  // Single-line horizontal scroll — no wrap, hidden scrollbar
+  chipRow: {
+    display: 'flex',
+    flexWrap: 'nowrap',
+    gap: 5,
+    overflowX: 'auto',
+    scrollbarWidth: 'none',   // Firefox
+    msOverflowStyle: 'none',  // IE/Edge
+    paddingBottom: 2,
+  },
   chip: {
     padding: '4px 9px',
     borderRadius: 20,
@@ -435,8 +469,8 @@ const s = {
     alignSelf: 'flex-end',
   },
   bubbleBot: {
-    background: '#f1f5f9',
-    color: '#1e293b',
+    background: 'var(--card-bg)',
+    color: 'var(--text-primary)',
     borderRadius: '2px 10px 10px 10px',
   },
   bubbleError: {
@@ -447,9 +481,9 @@ const s = {
   updatedPill: {
     fontSize: 10,
     fontWeight: 600,
-    color: '#16a34a',
-    background: '#f0fdf4',
-    border: '1px solid #bbf7d0',
+    color: '#14b8a6',
+    background: 'rgba(20,184,166,0.1)',
+    border: '1px solid rgba(20,184,166,0.3)',
     padding: '2px 8px',
     borderRadius: 20,
     display: 'inline-flex',
@@ -461,7 +495,7 @@ const s = {
     display: 'flex',
     gap: 8,
     padding: '10px 14px 4px',
-    borderTop: '1px solid #f1f5f9',
+    borderTop: '1px solid var(--border-color)',
     flexShrink: 0,
     alignItems: 'flex-end',
   },
@@ -469,10 +503,10 @@ const s = {
     flex: 1,
     padding: '9px 11px',
     borderRadius: 9,
-    border: '1.5px solid #e2e8f0',
-    background: '#f8fafc',
+    border: '1.5px solid var(--border-color)',
+    background: 'var(--bg-color)',
     fontSize: 12,
-    color: '#1e293b',
+    color: 'var(--text-primary)',
     resize: 'none',
     fontFamily: 'inherit',
     lineHeight: 1.45,

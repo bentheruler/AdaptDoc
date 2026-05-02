@@ -21,7 +21,9 @@ const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
 );
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const hostname = window.location.hostname;
+const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc.onrender.com');
 const API_URL = `${API_BASE}/api`;
 
 const AdminDashboardPage = () => {
@@ -125,7 +127,7 @@ const AdminDashboardPage = () => {
           <div style={s.statTitle}>Total Users</div>
           <div style={s.statValue}>{stats.totalUsers}</div>
           <div style={s.statSub}>
-            <span style={{color: '#4ade80'}}>{stats.activeUsers} Active</span> • <span style={{color: '#ef4444'}}>{stats.restrictedUsers} Restricted</span>
+            <span style={{color: '#14b8a6'}}>{stats.activeUsers} Active</span> • <span style={{color: '#ef4444'}}>{stats.restrictedUsers} Restricted</span>
           </div>
         </div>
         <div style={s.statCard}>
@@ -238,7 +240,7 @@ const AdminDashboardPage = () => {
       name: key.replace('_', ' '),
       value: stats.byDocType[key]
     }));
-    const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+    const COLORS = ['#14b8a6', '#0891b2', '#f59e0b', '#ef4444'];
 
     const providerData = [
       { name: 'Gemini', success: stats.gemini.successRate, latency: stats.gemini.avgLatency },
@@ -287,7 +289,7 @@ const AdminDashboardPage = () => {
                   <XAxis dataKey="name" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
                   <Tooltip contentStyle={{background: '#0f172a', border: '1px solid #1e293b'}} />
-                  <Bar dataKey="success" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="success" fill="#14b8a6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -314,7 +316,7 @@ const AdminDashboardPage = () => {
                   <td>{log.documentType}</td>
                   <td>
                     {log.success 
-                      ? <span style={{color: '#4ade80'}}>✓ Success</span> 
+                      ? <span style={{color: '#14b8a6'}}>✓ Success</span> 
                       : <span style={{color: '#ef4444'}}>✗ Failed</span>}
                   </td>
                   <td>{log.latencyMs}</td>
@@ -456,8 +458,8 @@ const s = {
     transition: 'all 0.2s',
   },
   activeTab: {
-    color: '#3b82f6',
-    borderBottomColor: '#3b82f6',
+    color: '#14b8a6',
+    borderBottomColor: '#14b8a6',
   },
   content: {
     display: 'flex',
@@ -560,7 +562,7 @@ const s = {
     color: '#64748b',
   },
   btnSave: {
-    background: '#3b82f6',
+    background: '#14b8a6',
     color: '#fff',
     border: 'none',
     padding: '10px 20px',

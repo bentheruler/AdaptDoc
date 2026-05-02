@@ -69,7 +69,7 @@ const ProposalPreview = ({ data, onDataChange, theme, fontSize, fontFamily = 'In
   }
 
   return (
-    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight }}>
+    <div style={{ fontFamily: `"${fontFamily}", sans-serif`, lineHeight, display: "flex", flexDirection: "column", flex: 1, minHeight: "100%" }}>
       <Comp {...props} />
     </div>
   );
@@ -159,7 +159,7 @@ function ModernProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Lato',sans-serif", fontSize: fz, background: '#fff', minHeight: 700 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700 }}>
       <div style={{ background: dark, padding: '30px 40px', color: '#fff', borderBottom: `4px solid ${accent}`, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -20, top: -20, width: 140, height: 140, borderRadius: '50%', background: `${accent}15`, pointerEvents: 'none' }} />
         <EditableField value={data.title}    onChange={v => update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2, fontWeight: 800, color: '#fff', lineHeight: 1.1, display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -205,7 +205,7 @@ function ClassicProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'EB Garamond',Georgia,serif", fontSize: fz, background: '#fffef9', padding: '40px 48px', minHeight: 700, color: '#1a1a1a' }}>
+    <div style={{  fontSize: fz, background: '#fffef9', padding: '40px 48px', minHeight: 700, color: '#1a1a1a' }}>
       <div style={{ textAlign: 'center', borderBottom: `2px solid ${accent}`, paddingBottom: 20, marginBottom: 28 }}>
         <EditableField value={data.title}    onChange={v => update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.1, fontWeight: 400, color: '#1a1a1a', letterSpacing: '1px', fontVariant: 'small-caps', display: 'block' }} />
         <EditableField value={data.subtitle} onChange={v => update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.95, color: '#666', fontStyle: 'italic', display: 'block', marginTop: 6 }} />
@@ -249,7 +249,7 @@ function MinimalProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'DM Sans','Helvetica Neue',sans-serif", fontSize: fz, background: '#fafafa', padding: '48px 52px', minHeight: 700, color: '#111' }}>
+    <div style={{  fontSize: fz, background: '#fafafa', padding: '48px 52px', minHeight: 700, color: '#111' }}>
       <div style={{ marginBottom: 40 }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.4, fontWeight: 200, color: '#111', letterSpacing: '-1.5px', lineHeight: 1, display: 'block' }} />
         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -290,10 +290,10 @@ function BoldProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Barlow','Helvetica Neue',sans-serif", fontSize: fz, background: '#fff', minHeight: 700 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700 }}>
       <div style={{ background: dark, padding: '28px 36px 22px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: accent }} />
-        <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 800, color: '#fff', lineHeight: 1, textTransform: 'uppercase', letterSpacing: '-0.5px', display: 'block', fontFamily: "'Barlow Condensed','Barlow',sans-serif" }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.4)' }} />
+        <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 800, color: '#fff', lineHeight: 1, textTransform: 'uppercase', letterSpacing: '-0.5px', display: 'block', }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.4)' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.88, color: accent, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', marginTop: 8, display: 'block' }} inputStyle={{ color: accent }} />
         <div style={{ marginTop: 14 }}><MetaGrid data={data} update={update} editMode={editMode} fz={fz} labelSx={{ color: 'rgba(255,255,255,0.4)' }} valueSx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }} /></div>
       </div>
@@ -341,10 +341,10 @@ function ExecutiveProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: fz, background: '#fdfcf8', minHeight: 700, color: '#1a1510' }}>
+    <div style={{  fontSize: fz, background: '#fdfcf8', minHeight: 700, color: '#1a1510' }}>
       <div style={{ background: 'linear-gradient(135deg,#0f172a,#1e293b)', padding: '36px 48px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg,${gold},${gold}88)` }} />
-        <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 300, color: '#fff', letterSpacing: '2px', display: 'block', fontFamily: "'Cormorant Garamond',serif" }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.3)' }} />
+        <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 300, color: '#fff', letterSpacing: '2px', display: 'block', }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.3)' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.9, color: gold, fontWeight: 300, letterSpacing: '3px', textTransform: 'uppercase', marginTop: 8, display: 'block' }} inputStyle={{ color: gold }} />
         <div style={{ marginTop: 18, display: 'flex', gap: 28, flexWrap: 'wrap' }}>
           {[['Prepared by','preparedBy'],['Prepared for','preparedFor'],['Date','date']].map(([label,field])=>(editMode||data[field])&&(
@@ -390,9 +390,9 @@ function TechProposal({ data, update, accent, fz, editMode }) {
       {children}
     </div>
   );
-  const inputSx = { background: 'rgba(255,255,255,0.05)', border: `1px dashed ${green}60`, borderRadius: 3, color: '#e6edf3', fontFamily: "'Fira Code',monospace", outline: 'none', padding: '2px 6px' };
+  const inputSx = { background: 'rgba(255,255,255,0.05)', border: `1px dashed ${green}60`, borderRadius: 3, color: '#e6edf3',  outline: 'none', padding: '2px 6px' };
   return (
-    <div style={{ fontFamily: "'Fira Code',Consolas,monospace", fontSize: fz, background: bg, minHeight: 700, color: '#e6edf3' }}>
+    <div style={{  fontSize: fz, background: bg, minHeight: 700, color: '#e6edf3' }}>
       <div style={{ background: bg2, borderBottom: `1px solid ${border}`, padding: '24px 28px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}><span style={{ color: green }}>~/</span><EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{ fontSize: fz * 1.7, fontWeight: 600, color: '#e6edf3' }} inputStyle={inputSx} /></div>
         <div style={{ display: 'flex', gap: 8 }}><span style={{ color: muted }}>$</span><EditableField value={data.subtitle} onChange={v=>update('subtitle',v)} editMode={editMode} style={{ fontSize: fz * 0.85, color: green }} inputStyle={inputSx} /></div>
@@ -437,7 +437,7 @@ function CreativeProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: fz, background: '#fff', minHeight: 700, position: 'relative', overflow: 'hidden' }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: -30, right: -30, width: 200, height: 200, borderRadius: '50%', background: `${accent}10`, pointerEvents: 'none' }} />
       <div style={{ background: `linear-gradient(135deg,${accent},${accent}cc)`, padding: '28px 36px 22px', clipPath: 'polygon(0 0,100% 0,100% 82%,0 100%)', marginBottom: 8 }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.9, fontWeight: 800, color: '#fff', lineHeight: 1.15, display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -479,7 +479,7 @@ function AcademicProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Source Serif 4',Georgia,serif", fontSize: fz, background: '#fff', padding: '32px 36px', minHeight: 700, color: '#111' }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '32px 36px', minHeight: 700, color: '#111' }}>
       <div style={{ textAlign: 'center', borderBottom: `2px solid ${accent}`, paddingBottom: 16, marginBottom: 24 }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.9, fontWeight: 600, color: '#111', display: 'block' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.88, color: accent, fontStyle: 'italic', display: 'block', marginTop: 4 }} />
@@ -521,7 +521,7 @@ function CorporateProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Roboto','Helvetica Neue',sans-serif", fontSize: fz, background: '#fff', padding: '0 0 28px', minHeight: 700 }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '0 0 28px', minHeight: 700 }}>
       <div style={{ background: accent, padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.7, fontWeight: 700, color: '#fff', display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -563,7 +563,7 @@ function TimelineProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Mulish',sans-serif", fontSize: fz, background: '#fff', minHeight: 700, display: 'flex' }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700, display: 'flex' }}>
       <div style={{ width: '30%', background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 18px' }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.45, fontWeight: 700, color: '#111', lineHeight: 1.2, display: 'block' }} />
         <EditableField value={data.subtitle} onChange={v=>update('subtitle', v)} editMode={editMode} style={{ fontSize: fz * 0.8, color: accent, fontWeight: 600, marginTop: 5, display: 'block', letterSpacing: '0.5px' }} />
@@ -619,7 +619,7 @@ function InfographicProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: fz, background: '#fff', minHeight: 700 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700 }}>
       <div style={{ background: accent, padding: '24px 32px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.8, fontWeight: 700, color: '#fff', display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
@@ -681,7 +681,7 @@ function NordicProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif", fontSize: fz, background: '#fff', padding: '52px 56px', minHeight: 700, color: '#111' }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '52px 56px', minHeight: 700, color: '#111' }}>
       <div style={{ marginBottom: 44 }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.8, fontWeight: 200, color: '#111', letterSpacing: '-2px', lineHeight: 1, display: 'block' }} />
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -718,7 +718,7 @@ function ElegantProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Libre Baskerville',Georgia,serif", fontSize: fz, background: '#fff', padding: '44px 52px', minHeight: 700, color: '#1a1a1a' }}>
+    <div style={{  fontSize: fz, background: '#fff', padding: '44px 52px', minHeight: 700, color: '#1a1a1a' }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.2, fontWeight: 700, color: '#1a1a1a', letterSpacing: '3px', textTransform: 'uppercase', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '10px 0 8px' }}>
@@ -759,7 +759,7 @@ function ChicagoProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: fz, background: '#fafaf8', minHeight: 700, border: '2px solid #111' }}>
+    <div style={{  fontSize: fz, background: '#fafaf8', minHeight: 700, border: '2px solid #111' }}>
       <div style={{ borderBottom: '3px solid #111', padding: '18px 28px', textAlign: 'center' }}>
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 2.6, fontWeight: 900, color: '#111', lineHeight: 1, letterSpacing: '-1px', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '6px 0' }}>
@@ -808,7 +808,7 @@ function SunsetProposal({ data, update, accent, fz, editMode }) {
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Quicksand','Nunito',sans-serif", fontSize: fz, background: '#fff', minHeight: 700 }}>
+    <div style={{  fontSize: fz, background: '#fff', minHeight: 700 }}>
       <div style={{ background: `linear-gradient(135deg,${accent} 0%,#f97316 100%)`, padding: '28px 36px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -30, bottom: -30, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
         <EditableField value={data.title}    onChange={v=>update('title',    v)} editMode={editMode} style={{ fontSize: fz * 1.9, fontWeight: 700, color: '#fff', lineHeight: 1.15, display: 'block' }} inputStyle={{ color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px dashed rgba(255,255,255,0.4)' }} />
