@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from 'docx';

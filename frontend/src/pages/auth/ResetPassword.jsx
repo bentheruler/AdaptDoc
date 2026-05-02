@@ -95,7 +95,7 @@ const styles = {
   button: {
     padding: 10,
     width: "100%",
-    background: "#2563eb",
+    background: "#0d9488",
     color: "#fff",
     border: "none",
     borderRadius: 6,

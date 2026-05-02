@@ -61,6 +61,12 @@ const sendVerificationEmail = async (user, token) => {
 const sendPasswordResetEmail = async (user, token) => {
   const transporter = createTransporter();
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+  
+  // Log the URL for local testing since email might not be configured yet
+  console.log('----------------------------------------');
+  console.log(`Password reset link for ${user.email}:`);
+  console.log(resetUrl);
+  console.log('----------------------------------------');
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,

@@ -176,7 +176,7 @@ const SettingsTab = () => {
   const handleRemoveAvatar = async () => {
     try {
       setAvatarLoading(true);
-      const res = await axios.put(`${API_URL}/user/avatar`, { avatar: null }, getHeaders());
+      await axios.put(`${API_URL}/user/avatar`, { avatar: null }, getHeaders());
       updateUser({ ...user, avatar: null });
       setAvatarPreview(null);
       setAvatarMsg({ type: 'success', text: 'Profile picture removed.' });
