@@ -294,7 +294,7 @@ const RightPanelTabs = ({ active, onChange }) => {
   ];
 
   return (
-    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', padding: '0 20px', gap: 0, flexShrink: 0 }}>
+    <div style={{ display: 'flex', background: 'transparent', padding: '0 20px', gap: 4, flexShrink: 0 }}>
       {tabs.map((t) => (
         <button
           key={t.id}
@@ -303,9 +303,9 @@ const RightPanelTabs = ({ active, onChange }) => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            padding: '12px 16px',
-            fontSize: 12,
-            fontWeight: 500,
+            padding: '14px 16px',
+            fontSize: 13,
+            fontWeight: 600,
             border: 'none',
             background: 'none',
             cursor: 'pointer',
@@ -784,9 +784,9 @@ const DashboardPage = () => {
           {activeTab === 'create' && createStep === 'preview' && (
             <div style={s.createLayout}>
               <div style={s.rightPanel}>
-                <div style={{ display: 'flex', alignItems: 'center', background: '#080c14', paddingRight: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', paddingRight: '20px' }}>
                   <button
-                    style={{ ...s.btnGhost, margin: '12px 20px', border: 'none', background: '#1e293b', color: '#e2e8f0' }}
+                    style={{ ...s.btnGhost, margin: '12px 20px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', borderRadius: 8, padding: '8px 16px', fontWeight: 600 }}
                     onClick={() => setCreateStep('input')}
                   >
                     ← Back to Form

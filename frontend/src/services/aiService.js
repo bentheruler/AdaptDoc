@@ -1,24 +1,14 @@
-import axios from "axios";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
-const API = `${API_BASE}/api`;
+import api from "../utils/api";
 
 export const generateDocumentAI = async (docType, userData) => {
-  const token =
-    localStorage.getItem("accessToken") || localStorage.getItem("token");
+  const res = await api.post("/ai/generate", {
+    docType,
+    userData
+  });
+  return res.data;
+};
 
-  const res = await axios.post(
-    `${API}/ai/generate`,
-    {
-      docType,
-      userData
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  );
-
+export const chatEditDocument = async (payload) => {
+  const res = await api.post("/ai/chat-edit", payload);
   return res.data;
 };
