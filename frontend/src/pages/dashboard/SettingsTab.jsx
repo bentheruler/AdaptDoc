@@ -363,6 +363,25 @@ const SettingsTab = () => {
             </div>
           </div>
         </div>
+
+        {/* Support & Contact Section */}
+        <div style={s.settingsCard}>
+          <h3 style={s.sectionTitle}>Support & Contact</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Need help with your account, encountered a bug, or have a feature request? Our support team is here to assist you.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <span style={{ fontSize: 18 }}>✉️</span>
+              <a 
+                href="mailto:support@adaptdoc.com" 
+                style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent-color)', textDecoration: 'none' }}
+              >
+                support@adaptdoc.com
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

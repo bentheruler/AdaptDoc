@@ -105,7 +105,7 @@ const CustomizationPanel = ({
     try {
       const saved = sessionStorage.getItem(storageKey);
       if (saved) return JSON.parse(saved);
-    } catch (e) {}
+    } catch (e) { }
     return [{ role: 'assistant', text: WELCOME }];
   });
   const [input, setInput] = useState('');
@@ -122,7 +122,7 @@ const CustomizationPanel = ({
   useEffect(() => {
     try {
       sessionStorage.setItem(storageKey, JSON.stringify(messages));
-    } catch (e) {}
+    } catch (e) { }
   }, [messages, storageKey]);
 
   useEffect(() => {
@@ -143,8 +143,8 @@ const CustomizationPanel = ({
     docType === 'cv'
       ? cvData
       : docType === 'cover_letter'
-      ? coverLetterData
-      : proposalData;
+        ? coverLetterData
+        : proposalData;
 
   const applyUpdate = (updated) => {
     if (docType === 'cv') {
@@ -178,21 +178,8 @@ const CustomizationPanel = ({
         ],
       };
 
-      const hostname = window.location.hostname;
-      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
-      const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
-      const response = await fetch(`${API_BASE}/api/ai/chat-edit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
-        body: JSON.stringify(payload),
-      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.message || data?.error || 'API error');
-      }
       const data = await chatEditDocument(payload);
 
       let updatedDoc = null;
@@ -365,12 +352,10 @@ const s = {
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    background: 'transparent',
+    background: 'var(--bg-color)',
     fontFamily: "'Inter','Segoe UI',sans-serif",
-    background: '#ffffff',
-    fontFamily: "'Inter', system-ui, sans-serif",
     overflow: 'hidden',
-    borderLeft: '1px solid #e5e7eb',
+    borderLeft: '1px solid var(--border-color)',
   },
 
   header: {
@@ -379,9 +364,7 @@ const s = {
     justifyContent: 'space-between',
     padding: '14px 16px 12px',
     borderBottom: '1px solid var(--border-color)',
-    padding: '16px 20px',
-    borderBottom: '1px solid #f3f4f6',
-    background: '#ffffff',
+    background: 'var(--card-bg)',
     flexShrink: 0,
   },
   headerLeft: { display: 'flex', alignItems: 'center', gap: 12 },
@@ -397,69 +380,50 @@ const s = {
     flexShrink: 0,
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
   },
-  headerTitle: { fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' },
-  headerSub: { fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 },
-  headerTitle: { fontSize: 14, fontWeight: 600, color: '#0f172a', letterSpacing: '-0.01em' },
-  headerSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  headerTitle: { fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' },
+  headerSub: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 },
   updateBadge: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 4,
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#14b8a6',
-    background: 'rgba(20,184,166,0.1)',
-    border: '1px solid rgba(20,184,166,0.3)',
-    padding: '3px 8px',
-    borderRadius: 20,
     gap: 6,
     fontSize: 11,
     fontWeight: 600,
-    color: '#0f172a',
-    background: '#f1f5f9',
+    color: 'var(--accent-color)',
+    background: 'var(--accent-subtle)',
     padding: '4px 10px',
     borderRadius: 16,
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--border-color)',
   },
 
   chipZone: {
-    padding: '8px 14px 6px',
-    borderBottom: '1px solid var(--border-color)',
     padding: '16px 20px',
-    borderBottom: '1px solid #f3f4f6',
-    background: '#f8fafc',
+    borderBottom: '1px solid var(--border-color)',
+    background: 'var(--bg-color)',
     flexShrink: 0,
   },
   chipLabel: {
-    fontSize: 9,
-    fontWeight: 700,
-    color: '#94a3b8',
     fontSize: 11,
     fontWeight: 600,
-    color: '#475569',
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.07em',
-    marginBottom: 5,
-    letterSpacing: '0.04em',
     marginBottom: 10,
   },
-  // Single-line horizontal scroll — no wrap, hidden scrollbar
   chipRow: {
     display: 'flex',
     flexWrap: 'nowrap',
-    gap: 5,
+    gap: 8,
     overflowX: 'auto',
     scrollbarWidth: 'none',   // Firefox
     msOverflowStyle: 'none',  // IE/Edge
     paddingBottom: 2,
   },
-  chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   chip: {
     padding: '6px 12px',
     borderRadius: 6,
-    border: '1px solid #cbd5e1',
-    background: '#ffffff',
-    color: '#0f172a',
+    border: '1px solid var(--border-color)',
+    background: 'var(--card-bg)',
+    color: 'var(--text-primary)',
     fontSize: 12,
     fontWeight: 500,
     cursor: 'pointer',
@@ -476,21 +440,21 @@ const s = {
     flexDirection: 'column',
     gap: 16,
     minHeight: 0,
-    background: '#ffffff',
+    background: 'var(--card-bg)',
   },
   avatarRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 },
   botAvatar: {
     width: 20,
     height: 20,
     borderRadius: 4,
-    background: '#f1f5f9',
-    color: '#0f172a',
+    background: 'var(--accent-subtle)',
+    color: 'var(--accent-color)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  avatarLabel: { fontSize: 12, fontWeight: 600, color: '#475569' },
+  avatarLabel: { fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' },
   bubble: {
     maxWidth: '85%',
     padding: '12px 16px',
@@ -508,32 +472,22 @@ const s = {
     alignSelf: 'flex-end',
   },
   bubbleBot: {
-    background: 'var(--card-bg)',
+    background: 'var(--bg-color)',
     color: 'var(--text-primary)',
-    borderRadius: '2px 10px 10px 10px',
-    background: '#f8fafc',
-    color: '#1e293b',
     borderRadius: '0px 8px 8px 8px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--border-color)',
   },
   bubbleError: {
-    background: '#fef2f2',
-    color: '#991b1b',
-    border: '1px solid #fca5a5',
+    background: 'rgba(239, 68, 68, 0.1)',
+    color: 'var(--danger-color)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
   },
   updatedPill: {
-    fontSize: 10,
-    fontWeight: 600,
-    color: '#14b8a6',
-    background: 'rgba(20,184,166,0.1)',
-    border: '1px solid rgba(20,184,166,0.3)',
-    padding: '2px 8px',
-    borderRadius: 20,
     fontSize: 11,
     fontWeight: 500,
-    color: '#0f172a',
-    background: '#f1f5f9',
-    border: '1px solid #e2e8f0',
+    color: 'var(--accent-color)',
+    background: 'var(--accent-subtle)',
+    border: '1px solid var(--border-color)',
     padding: '4px 10px',
     borderRadius: 16,
     display: 'inline-flex',
@@ -544,30 +498,21 @@ const s = {
 
   inputWrap: {
     display: 'flex',
-    gap: 8,
-    padding: '10px 14px 4px',
-    borderTop: '1px solid var(--border-color)',
     gap: 12,
     padding: '16px 20px',
-    borderTop: '1px solid #f3f4f6',
-    background: '#ffffff',
+    borderTop: '1px solid var(--border-color)',
+    background: 'var(--card-bg)',
     flexShrink: 0,
     alignItems: 'flex-end',
   },
   textarea: {
     flex: 1,
-    padding: '9px 11px',
-    borderRadius: 9,
-    border: '1.5px solid var(--border-color)',
-    background: 'var(--bg-color)',
-    fontSize: 12,
-    color: 'var(--text-primary)',
     padding: '12px 14px',
     borderRadius: 8,
-    border: '1px solid #cbd5e1',
-    background: '#ffffff',
+    border: '1px solid var(--border-color)',
+    background: 'var(--bg-color)',
     fontSize: 13,
-    color: '#0f172a',
+    color: 'var(--text-primary)',
     resize: 'none',
     fontFamily: 'inherit',
     lineHeight: 1.5,
@@ -589,13 +534,13 @@ const s = {
     flexShrink: 0,
     transition: 'background 0.2s, transform 0.1s',
   },
-  sendBtnDisabled: { background: '#94a3b8', cursor: 'not-allowed', transform: 'none' },
+  sendBtnDisabled: { background: 'var(--border-color)', cursor: 'not-allowed', transform: 'none' },
   hint: {
     fontSize: 11,
-    color: '#64748b',
+    color: 'var(--text-secondary)',
     textAlign: 'center',
     paddingBottom: 16,
-    background: '#ffffff',
+    background: 'var(--card-bg)',
     flexShrink: 0,
   },
 };

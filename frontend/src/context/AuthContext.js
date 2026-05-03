@@ -36,9 +36,7 @@ export const AuthProvider = ({ children }) => {
     if (user?.settings?.appearance) {
       const { theme, accentColor } = user.settings.appearance;
       document.documentElement.setAttribute('data-theme', theme || 'dark');
-      // Only apply saved accent if it's a teal-family color, else use default teal
-      const tealFamily = /^#(0[0-9a-f]9[0-9a-f]|14b8|2dd4|0d94|0f76)/i;
-      const resolvedAccent = (accentColor && tealFamily.test(accentColor)) ? accentColor : '#14b8a6';
+      const resolvedAccent = accentColor || '#14b8a6';
       document.documentElement.style.setProperty('--accent-color', resolvedAccent);
     } else {
       document.documentElement.setAttribute('data-theme', 'dark');

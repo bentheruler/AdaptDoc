@@ -243,11 +243,13 @@ const FieldRow = ({ field, value, onChange, onRemove }) => {
 const LeftPanelTabs = ({ active, onChange }) => {
   const tabs = [
     { id: 'edit', label: 'Form', icon: <EditIcon /> },
-    { id: 'style', label: 'AI Edit', icon: (
-      <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-      </svg>
-    ) },
+    {
+      id: 'style', label: 'AI Edit', icon: (
+        <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        </svg>
+      )
+    },
     { id: 'templates', label: 'Templates', icon: <ThemeIcon /> },
     // Preview tab — only shown on mobile via CSS
     { id: 'preview', label: 'Preview', icon: <EyeIcon />, mobileOnly: true },
@@ -287,6 +289,35 @@ const LeftPanelTabs = ({ active, onChange }) => {
   );
 };
 
+const RightPanelTabs = ({ active, onChange }) => {
+  const tabs = [
+    { id: 'preview', label: 'Preview', icon: <EyeIcon /> },
+    { id: 'style', label: 'Style', icon: <EditIcon /> },
+    { id: 'templates', label: 'Templates', icon: <ThemeIcon /> },
+  ];
+  return (
+    <div style={rpt.bar}>
+      {tabs.map(t => (
+        <button
+          key={t.id}
+          style={{ ...rpt.tab, ...(active === t.id ? rpt.active : rpt.inactive) }}
+          onClick={() => onChange(t.id)}
+        >
+          {t.icon}
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const rpt = {
+  bar: { display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', padding: '0 20px', gap: 2, flexShrink: 0 },
+  tab: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 14px', fontSize: 13, fontWeight: 500, border: 'none', background: 'none', cursor: 'pointer', borderBottom: '2px solid transparent', marginBottom: -1, transition: 'color 0.15s, border-color 0.15s' },
+  active: { color: 'var(--accent-color)', borderBottomColor: 'var(--accent-color)' },
+  inactive: { color: 'var(--text-secondary)' },
+};
+
 const DashboardPage = () => {
   const { user, logoutUser } = useAuth();
   const toast = useToast();
@@ -308,6 +339,7 @@ const DashboardPage = () => {
   const [showWatermark, setShowWatermark] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [leftTab, setLeftTab] = useState('edit');
+  const [rightTab, setRightTab] = useState('preview');
   const [createStep, setCreateStep] = useState('input');
 
   // Pre-fill data with the logged-in user's info so templates are never empty by default
@@ -386,6 +418,8 @@ const DashboardPage = () => {
       loadDocuments();
     }
   }, [activeTab, loadDocuments]);
+
+
 
   const docType =
     category === 'CV'
@@ -504,18 +538,19 @@ const DashboardPage = () => {
       if (!previewRef.current) throw new Error('Preview not found');
 
       const element = previewRef.current;
-      
+
       let filename = 'document';
       if (docType === 'cv') filename = cvData.name ? `${cvData.name}_CV` : 'CV';
       else if (docType === 'cover_letter') filename = coverLetterData.senderName ? `${coverLetterData.senderName}_Cover_Letter` : 'Cover_Letter';
       else if (docType === 'business_proposal') filename = proposalData.title ? `${proposalData.title}_Proposal` : 'Proposal';
 
       const opt = {
-        margin:       0,
-        filename:     `${filename.replace(/\s+/g, '_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: paperSize === 'Letter' ? 'letter' : 'a4', orientation: 'portrait' }
+        margin: 0,
+        filename: `${filename.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: paperSize === 'Letter' ? 'letter' : 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
       };
 
       await html2pdf().set(opt).from(element).save();
@@ -669,10 +704,9 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {activeTab === 'create' && (
-            <div style={s.createLayout} className="create-layout-split">
-              {/* LEFT PANEL - WIZARD / AI / TEMPLATES / MOBILE PREVIEW */}
-              <div style={s.leftPanel} className="create-left-panel">
+          {activeTab === 'create' && createStep === 'input' && (
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', background: 'var(--bg-color)' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--card-bg)' }}>
                 <div style={s.leftHeader}>
                   <DocumentEditor
                     category={category}
@@ -714,41 +748,47 @@ const DashboardPage = () => {
           )}
 
           {activeTab === 'create' && createStep === 'preview' && (
-            <div style={s.createLayout}>
-              <div style={s.rightPanel}>
-                <div style={{ display: 'flex', alignItems: 'center', background: '#080c14', paddingRight: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', background: 'var(--bg-color)' }}>
+              {/* TOP NAVIGATION BAR */}
+              <div style={{ display: 'flex', alignItems: 'center', background: '#080c14', paddingRight: '20px', borderBottom: '1px solid var(--border-color)', flexShrink: 0 }}>
+                <button
+                  style={{ ...s.btnGhost, margin: '12px 20px', border: 'none', background: '#1e293b', color: '#e2e8f0' }}
+                  onClick={() => setCreateStep('input')}
+                >
+                  ← Back to Form
+                </button>
+                <RightPanelTabs active={rightTab} onChange={setRightTab} />
+                <div style={{ flex: 1 }} />
+                <div style={{ display: 'flex', gap: 7 }}>
                   <button
-                    style={{ ...s.btnGhost, margin: '12px 20px', border: 'none', background: '#1e293b', color: '#e2e8f0' }}
-                    onClick={() => setCreateStep('input')}
+                    style={{ ...s.btnGhost, ...(pdfLoading ? s.btnDisabled : {}) }}
+                    onClick={handleDownloadPDF}
+                    disabled={pdfLoading}
                   >
-                    ← Back to Form
-                  </button>
-                  <RightPanelTabs active={rightTab} onChange={setRightTab} />
-
-                  <div style={{ flex: 1 }} />
-                  <div style={{ display: 'flex', gap: 7 }}>
-                    <button
-                      style={{ ...s.btnGhost, ...(pdfLoading ? s.btnDisabled : {}) }}
-                      onClick={handleDownloadPDF}
-                      disabled={pdfLoading}
-                    >
+                    {pdfLoading ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                      </svg>
+                    ) : (
                       <PdfIcon />
-                      <span>{pdfLoading ? '…' : 'PDF'}</span>
-                    </button>
-                  </div>
+                    )}
+                    <span>{pdfLoading ? 'Exporting…' : 'Export PDF'}</span>
+                  </button>
+                  <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
                 </div>
+              </div>
 
-                <div style={s.rightContent}>
-                  {rightTab === 'preview' && (
-                    <div style={s.previewWrap}>
-                      <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)}>
-                        {renderPreview()}
-                      </DocumentPreview>
-                    </div>
-                  )}
+              {/* CONTENT AREA */}
+              <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ ...s.previewWrap, display: rightTab === 'preview' ? 'flex' : 'none' }}>
+                    <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)} paperSize={paperSize} showWatermark={showWatermark}>
+                      {renderPreview()}
+                    </DocumentPreview>
+                  </div>
 
                   {rightTab === 'style' && (
-                    <div style={s.panelScroll}>
+                    <div style={{ ...s.panelScroll, padding: '24px 16px' }}>
                       <CustomizationPanel
                         cvData={cvData}
                         onCVUpdate={setCvData}
@@ -761,81 +801,34 @@ const DashboardPage = () => {
                     </div>
                   )}
 
-                <div style={{ ...s.formScroll, display: leftTab === 'templates' ? 'flex' : 'none', padding: 0 }}>
-                  <TemplateSelector
-                    theme={theme}
-                    onThemeChange={setTheme}
-                    fontSize={fontSize}
-                    onFontSizeChange={setFontSize}
-                    fontFamily={fontFamily}
-                    onFontFamilyChange={setFontFamily}
-                    accentColor={accentColor}
-                    onAccentChange={setAccentColor}
-                    spacing={spacing}
-                    onSpacingChange={setSpacing}
-                    paperSize={paperSize}
-                    onPaperSizeChange={setPaperSize}
-                    showPageNumbers={showPageNumbers}
-                    onShowPageNumbersChange={setShowPageNumbers}
-                    showWatermark={showWatermark}
-                    onShowWatermarkChange={setShowWatermark}
-                    onDownloadPDF={handleDownloadPDF}
-                    pdfLoading={pdfLoading}
-                    onDownloadWord={handleDownloadWord}
-                    wordLoading={wordLoading}
-                    thumbnail={<div style={{ width: '100%', height: '100%', transform: 'scale(0.3)', transformOrigin: 'top left' }}>{renderPreview()}</div>}
-                    renderPreview={renderPreview}
-                  />
-                </div>
-
-                {/* Mobile-only preview tab content */}
-                <div className="mobile-preview-panel" style={{ display: leftTab === 'preview' ? 'flex' : 'none', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid var(--border-color)', background: 'var(--card-bg)', gap: 8 }}>
-                    <button
-                      style={{ ...s.btnGhost, fontSize: 12, padding: '6px 12px', ...(pdfLoading ? s.btnDisabled : {}) }}
-                      onClick={handleDownloadPDF}
-                      disabled={pdfLoading}
-                    >
-                      <PdfIcon />
-                      <span>{pdfLoading ? 'Exporting…' : 'Export PDF'}</span>
-                    </button>
-                  </div>
-                  <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'var(--bg-color)' }}>
-                    <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)} paperSize={paperSize}>
-                      {renderPreview()}
-                    </DocumentPreview>
-                  </div>
-                </div>
-              </div>
-
-              {/* RIGHT PANEL - PREVIEW (hidden on mobile, always visible on desktop) */}
-              <div style={s.rightPanel} className="create-right-panel desktop-only-panel">
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '12px 16px' }}>
-                  <div style={{ display: 'flex', gap: 7 }}>
-                    <button
-                      style={{ ...s.btnGhost, ...(pdfLoading ? s.btnDisabled : {}) }}
-                      onClick={handleDownloadPDF}
-                      disabled={pdfLoading}
-                    >
-                      {pdfLoading ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                        </svg>
-                      ) : (
-                        <PdfIcon />
-                      )}
-                      <span>{pdfLoading ? 'Exporting…' : 'Export PDF'}</span>
-                    </button>
-                    <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-                  </div>
-                </div>
-
-                <div style={s.rightContent}>
-                  <div style={s.previewWrap} className="preview-wrap-responsive">
-                    <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)} paperSize={paperSize}>
-                      {renderPreview()}
-                    </DocumentPreview>
-                  </div>
+                  {rightTab === 'templates' && (
+                    <div style={{ ...s.panelScroll, padding: '24px 16px' }}>
+                      <TemplateSelector
+                        theme={theme}
+                        onThemeChange={setTheme}
+                        fontSize={fontSize}
+                        onFontSizeChange={setFontSize}
+                        fontFamily={fontFamily}
+                        onFontFamilyChange={setFontFamily}
+                        accentColor={accentColor}
+                        onAccentChange={setAccentColor}
+                        spacing={spacing}
+                        onSpacingChange={setSpacing}
+                        paperSize={paperSize}
+                        onPaperSizeChange={setPaperSize}
+                        showPageNumbers={showPageNumbers}
+                        onShowPageNumbersChange={setShowPageNumbers}
+                        showWatermark={showWatermark}
+                        onShowWatermarkChange={setShowWatermark}
+                        onDownloadPDF={handleDownloadPDF}
+                        pdfLoading={pdfLoading}
+                        onDownloadWord={handleDownloadWord}
+                        wordLoading={wordLoading}
+                        thumbnail={<div style={{ width: '100%', height: '100%', transform: 'scale(0.3)', transformOrigin: 'top left' }}>{renderPreview()}</div>}
+                        renderPreview={renderPreview}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
