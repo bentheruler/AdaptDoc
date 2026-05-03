@@ -6,15 +6,31 @@ const express=require('express');
 const app = express();
 
 app.use(cors({
-  origin: ["http://localhost:3000", process.env.FRONTEND_URL],
-  credentials: true
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean),
+  credentials: true,
 }));
+
+// Allow Google OAuth popups to communicate with opener window
+// (without this, COOP policy blocks window.closed calls from the popup)
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 app.use(express.json());
 
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log("Mongo Error:", err));
+mongoose.set('strictQuery', false);
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+})
+  .then(() => console.log("MongoDB Connected Successfully"))
+  .catch(err => console.log("Mongo Connection Error:", err));
 
 
 app.use('/api/auth', require('./routes/auth'));
@@ -24,6 +40,11 @@ app.use('/api/ai', require('./server/routes/aiRoutes'));
 
 app.get('/', (req, res) => {
   res.send("API Running...");
+});
+
+// Lightweight health check — used by frontend to warm Railway from cold sleep
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', ts: Date.now() });
 });
 
 app.use("/api/documents", require("./routes/documents.js"));

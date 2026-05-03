@@ -534,8 +534,8 @@ const DashboardPage = () => {
     return                                  <CVPreview           data={cvData}          onDataChange={setCvData}          theme={theme} fontSize={fontSize} accentColor={accentColor} editMode={editMode} />;
   };
 
-  const badgeBg = { cv: '#dbeafe', cover_letter: '#dcfce7', business_proposal: '#fef9c3' };
-  const badgeFg = { cv: '#1e40af', cover_letter: '#15803d', business_proposal: '#92400e' };
+  const badgeBg = { cv: '#dbeafe', cover_letter: '#ccfbf1', business_proposal: '#fef9c3' };
+  const badgeFg = { cv: '#1e40af', cover_letter: '#0d9488', business_proposal: '#92400e' };
 
   return (
     <div style={s.page}>

@@ -70,7 +70,18 @@ const userSchema = new mongoose.Schema(
           default: '#57d572'
         }
       }
-    }
+    },
+
+    profileData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+
+    // Profile picture — base64 data URL or external URL (e.g. from Google OAuth)
+    avatar: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

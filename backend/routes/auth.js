@@ -3,7 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
@@ -33,6 +36,12 @@ const sendVerificationEmail = async (user, token) => {
   const transporter = createTransporter();
   const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
+  // Log the URL for local testing since email might not be configured yet
+  console.log('----------------------------------------');
+  console.log(`Email verification link for ${user.email}:`);
+  console.log(verifyUrl);
+  console.log('----------------------------------------');
+
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to: user.email,
@@ -58,6 +67,12 @@ const sendVerificationEmail = async (user, token) => {
 const sendPasswordResetEmail = async (user, token) => {
   const transporter = createTransporter();
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+  
+  // Log the URL for local testing since email might not be configured yet
+  console.log('----------------------------------------');
+  console.log(`Password reset link for ${user.email}:`);
+  console.log(resetUrl);
+  console.log('----------------------------------------');
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
@@ -109,8 +124,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Use cost factor 8 instead of 10 — still very secure but ~4x faster
+    const hashedPassword = await bcrypt.hash(password, 8);
 
     const verificationToken = createToken();
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -126,15 +141,16 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    try {
-      await sendVerificationEmail(user, verificationToken);
-    } catch (mailError) {
-      console.error('Verification email failed:', mailError.message);
-    }
-
+    // ✅ Respond immediately — don't await email sending
     res.status(201).json({
-      message: 'User registered successfully. Please verify your email.',
+      message: 'User registered successfully. Please check your email to verify your account.',
     });
+
+    // Send email in background (non-blocking)
+    sendVerificationEmail(user, verificationToken).catch((mailError) => {
+      console.error('Verification email failed (background):', mailError.message);
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -154,14 +170,9 @@ router.post('/resend-verification', async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user) {
-      return res.json({
-        message: 'If that email exists, a verification link has been sent.',
-      });
-    }
-
-    if (user.isVerified) {
-      return res.json({ message: 'This email is already verified.' });
+    if (!user || user.isVerified) {
+      // Respond immediately regardless — prevents user enumeration
+      return res.json({ message: 'If that email exists and is unverified, a verification link has been sent.' });
     }
 
     const verificationToken = createToken();
@@ -171,15 +182,13 @@ router.post('/resend-verification', async (req, res) => {
     user.emailVerificationExpires = verificationExpiry;
     await user.save();
 
-    try {
-      await sendVerificationEmail(user, verificationToken);
-    } catch (mailError) {
-      console.error('Resend verification email failed:', mailError.message);
-    }
+    // Respond immediately — send email in background
+    res.json({ message: 'If that email exists and is unverified, a verification link has been sent.' });
 
-    res.json({
-      message: 'If that email exists, a verification link has been sent.',
+    sendVerificationEmail(user, verificationToken).catch((mailError) => {
+      console.error('Resend verification email failed (background):', mailError.message);
     });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -249,7 +258,7 @@ router.post('/login', async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '7d' }
     );
 
     const refreshToken = jwt.sign(
@@ -269,12 +278,115 @@ router.post('/login', async (req, res) => {
         status: user.status,
         isVerified: user.isVerified,
         settings: user.settings,
+        profileData: user.profileData,
       },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+/* ─────────────────────────────────────────────
+   GOOGLE LOGIN
+───────────────────────────────────────────── */
+router.post('/google-login', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'No Google token provided' });
+    }
+
+    let email, name, picture;
+    
+    // Try to parse as an ID token first
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email   = payload.email;
+      name    = payload.name;
+      picture = payload.picture; // Google profile picture URL
+    } catch (err) {
+      // If it fails, assume it's an access token and fetch from Google UserInfo endpoint
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        throw new Error('Invalid Google token');
+      }
+      const data = await response.json();
+      email   = data.email;
+      name    = data.name;
+      picture = data.picture; // Google profile picture URL
+    }
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Google token does not contain an email' });
+    }
+    
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    if (!user) {
+      // New user — create with Google profile picture
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+      
+      user = new User({
+        name: name || 'Google User',
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        isVerified: true,
+        avatar: picture || null,
+      });
+      await user.save();
+    } else {
+      // Existing user — update isVerified and refresh avatar if not already set
+      let changed = false;
+      if (!user.isVerified) { user.isVerified = true; changed = true; }
+      if (picture && !user.avatar) { user.avatar = picture; changed = true; }
+      if (changed) await user.save();
+      
+      if (user.status === 'restricted') {
+        return res.status(403).json({ message: 'Account is restricted' });
+      }
+    }
+    
+    const accessToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        settings: user.settings,
+        profileData: user.profileData,
+        avatar: user.avatar || null, // include avatar in login response
+      },
+    });
+
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'Google authentication failed' });
+  }
+});
+
 
 /* ─────────────────────────────────────────────
    GET CURRENT USER
@@ -335,16 +447,17 @@ router.post('/forgot-password', async (req, res) => {
       user.passwordResetExpires = resetExpiry;
       await user.save();
 
-      try {
-        await sendPasswordResetEmail(user, resetToken);
-      } catch (mailError) {
-        console.error('Password reset email failed:', mailError.message);
-      }
+      // Respond immediately — send email in background
+      res.json({ message: 'If that email exists, a password reset link has been sent.' });
+
+      sendPasswordResetEmail(user, resetToken).catch((mailError) => {
+        console.error('Password reset email failed (background):', mailError.message);
+      });
+    } else {
+      // Respond immediately even if user not found (security best practice)
+      res.json({ message: 'If that email exists, a password reset link has been sent.' });
     }
 
-    res.json({
-      message: 'If that email exists, a password reset link has been sent.',
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

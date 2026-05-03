@@ -126,15 +126,15 @@ Current document data:
 ${JSON.stringify(documentData, null, 2)}
 
 Your job:
-- edit the document based on the user's request
-- preserve the same document type
-- return the FULL updated document object
-- never remove required fields unless the user explicitly asks
-- keep arrays as arrays
-- keep object fields as objects
-- do not output markdown
-- do not output code fences
-- do not output explanation outside JSON
+- edit the document based ONLY on the user's request and the provided context.
+- preserve the same document type.
+- return the FULL updated document object.
+- NEVER remove required fields unless the user explicitly asks.
+- NEVER hallucinate or invent work history, education, or skills that are not implied by the user's prompt or existing data.
+- Keep arrays as arrays, and object fields as objects.
+- Do not output markdown.
+- Do not output code fences.
+- Do not output explanation outside JSON.
 
 Return ONLY valid JSON in exactly this shape:
 {
@@ -189,50 +189,9 @@ const parsePossiblyWrappedJSON = (text = '') => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /* ─────────────────────────────────────────────
-   OPENAI FALLBACK
+   GEMINI CALLER
 ───────────────────────────────────────────── */
-const callOpenAI = async ({ systemPrompt, messages }) => {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1-mini',
-      temperature: 0.2,
-      max_tokens: 3000,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...normalizeMessagesForOpenAI(messages),
-      ],
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || 'OpenAI request failed');
-  }
-
-  const text = data?.choices?.[0]?.message?.content || '';
-  console.log('OpenAI raw response length:', text.length);
-  console.log('OpenAI raw response preview:', text.slice(0, 500));
-  console.log('OpenAI raw response ending:', text.slice(-200));
-
-  const parsed = parsePossiblyWrappedJSON(text);
-
-  if (!parsed) {
-    throw new Error('OpenAI returned invalid JSON');
-  }
-
-  return parsed;
-};
-
-/* ─────────────────────────────────────────────
-   GEMINI PRIMARY
-───────────────────────────────────────────── */
-const callGemini = async ({ systemPrompt, messages }) => {
+const callGemini = async ({ systemPrompt, messages, modelName }) => {
   const joinedConversation = messages
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
     .join('\n\n');
@@ -242,7 +201,7 @@ const callGemini = async ({ systemPrompt, messages }) => {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: {
@@ -273,19 +232,14 @@ const callGemini = async ({ systemPrompt, messages }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error?.message || 'Gemini request failed');
+        throw new Error(data?.error?.message || `Gemini ${modelName} request failed`);
       }
 
       const text = extractGeminiText(data);
-
-      console.log('Gemini raw response length:', text.length);
-      console.log('Gemini raw response preview:', text.slice(0, 500));
-      console.log('Gemini raw response ending:', text.slice(-200));
-
       const parsed = parsePossiblyWrappedJSON(text);
 
       if (!parsed) {
-        throw new Error('Gemini returned invalid JSON');
+        throw new Error(`Gemini ${modelName} returned invalid JSON`);
       }
 
       return parsed;
@@ -312,6 +266,113 @@ const callGemini = async ({ systemPrompt, messages }) => {
 };
 
 /* ─────────────────────────────────────────────
+   GENERATE ROUTE — creates a full document from user inputs
+───────────────────────────────────────────── */
+router.post('/generate', async (req, res) => {
+  try {
+    const { docType, userData } = req.body;
+
+    if (!docType || !userData) {
+      return res.status(400).json({ message: 'docType and userData are required' });
+    }
+
+    // Build a generation prompt based on doc type and user-supplied info
+    const buildGeneratePrompt = () => {
+      if (docType === 'cv') {
+        return `Generate a professional CV for the following person. Return ONLY valid JSON with this exact shape:
+{
+  "content": {
+    "basics": { "name": "", "title": "", "email": "", "phone": "", "location": "", "linkedin": "", "summary": "" },
+    "skills": [],
+    "education": [{ "degree": "", "institution": "", "date": "" }],
+    "work": [{ "role": "", "company": "", "period": "", "bullets": [] }],
+    "projects": [],
+    "certifications": [],
+    "references": "Available upon request"
+  }
+}
+User data: ${JSON.stringify(userData)}
+- Write a compelling professional summary based on the job title and experience provided.
+- Generate realistic, professional bullet points for each work experience.
+- If skills are provided, keep them. If not, suggest relevant skills based on the job title.
+- Do not hallucinate dates or companies not mentioned.
+- Output JSON only, no explanation.`;
+      }
+
+      if (docType === 'cover_letter') {
+        return `Generate a professional cover letter. Return ONLY valid JSON with this exact shape:
+{
+  "content": {
+    "senderName": "", "senderTitle": "", "senderLocation": "", "senderEmail": "",
+    "date": "", "recipientName": "", "recipientTitle": "", "companyName": "", "companyLocation": "",
+    "subject": "", "opening": "", "body1": "", "body2": "", "body3": "", "closing": "",
+    "signoff": "Sincerely,", "signature": ""
+  }
+}
+User data: ${JSON.stringify(userData)}
+- Write a compelling subject line, engaging opening, two strong body paragraphs, and a professional closing.
+- Use the sender's name and email as-is. Fill in the recipient fields from user data.
+- Output JSON only, no explanation.`;
+      }
+
+      if (docType === 'business_proposal') {
+        return `Generate a professional business proposal. Return ONLY valid JSON with this exact shape:
+{
+  "content": {
+    "title": "", "subtitle": "Technical Proposal", "preparedBy": "", "preparedFor": "",
+    "date": "", "version": "v1.0", "executiveSummary": "", "problemStatement": "",
+    "proposedSolution": "", "deliverables": [], "timeline": [{"phase":"","duration":"","desc":""}],
+    "budget": "", "validity": "30 days", "closingNote": "", "contactName": "", "contactEmail": ""
+  }
+}
+User data: ${JSON.stringify(userData)}
+- Write a compelling executive summary, clear problem statement, and proposed solution.
+- Generate 3-5 realistic deliverables as an array of strings.
+- Output JSON only, no explanation.`;
+      }
+
+      return `Generate a professional document. User data: ${JSON.stringify(userData)}. Return valid JSON.`;
+    };
+
+    const systemPrompt = `You are an expert professional document writer for AdaptDoc.
+Your job is to generate a complete, high-quality, realistic document based on user-provided information.
+CRITICAL RULES:
+- Return ONLY valid JSON. No markdown, no explanation, no code fences.
+- Fill in all fields intelligently. Do NOT leave important fields empty.
+- Write professional, specific content — avoid generic filler text.
+- If a field was provided by the user, use it as-is. Enhance or fill missing fields.`;
+
+    const messages = [{ role: 'user', content: buildGeneratePrompt() }];
+
+    let result = null;
+    let provider = 'gemini-2.5-flash-lite';
+
+    try {
+      result = await callGemini({ systemPrompt, messages, modelName: provider });
+    } catch (geminiError) {
+      console.error('Primary model failed, trying fallback:', geminiError.message);
+      provider = 'gemini-2.0-flash-lite';
+      result = await callGemini({ systemPrompt, messages, modelName: provider });
+    }
+
+    if (!result || typeof result !== 'object') {
+      return res.status(500).json({ message: 'AI returned an invalid result' });
+    }
+
+    // The result should have a "content" key — unwrap it if wrapped
+    const content = result.content || result;
+
+    return res.json({ provider, docType, content });
+  } catch (error) {
+    console.error('Generate route error:', error);
+    return res.status(500).json({
+      message: 'AI generation is temporarily unavailable. Please try again.',
+      error: error.message,
+    });
+  }
+});
+
+/* ─────────────────────────────────────────────
    UNIFIED CHAT EDIT ROUTE
 ───────────────────────────────────────────── */
 router.post('/chat-edit', async (req, res) => {
@@ -328,14 +389,14 @@ router.post('/chat-edit', async (req, res) => {
     const systemPrompt = buildUnifiedSystemPrompt(docType, documentData);
 
     let result = null;
-    let provider = 'gemini';
+    let provider = 'gemini-2.5-flash-lite';
 
     try {
-      result = await callGemini({ systemPrompt, messages });
+      result = await callGemini({ systemPrompt, messages, modelName: provider });
     } catch (geminiError) {
-      console.error('Gemini failed, falling back to OpenAI:', geminiError.message);
-      provider = 'openai';
-      result = await callOpenAI({ systemPrompt, messages });
+      console.error('Primary Gemini model failed, falling back to gemini-2.0-flash-lite:', geminiError.message);
+      provider = 'gemini-2.5-flash-lite';
+      result = await callGemini({ systemPrompt, messages, modelName: provider });
     }
 
     if (!result || typeof result !== 'object') {

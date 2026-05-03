@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { mapAICvToPreview } from '../../utils/cvMapper';
 import { chatEditDocument } from '../../services/aiService';
 
 /* ══════════════════════════════════════════════════
@@ -98,7 +99,15 @@ const CustomizationPanel = ({
   docType = 'cv',
 }) => {
 
-  const [messages, setMessages] = useState([{ role: 'assistant', text: WELCOME }]);
+  const storageKey = `adapt_doc_ai_chat_${docType}`;
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [{ role: 'assistant', text: WELCOME }];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [updateCount, setUpdateCount] = useState(0);
@@ -111,9 +120,24 @@ const CustomizationPanel = ({
   }, [messages, loading]);
 
   useEffect(() => {
-    setMessages([{ role: 'assistant', text: WELCOME }]);
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch (e) {}
+  }, [messages, storageKey]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        setMessages([{ role: 'assistant', text: WELCOME }]);
+      }
+    } catch (e) {
+      setMessages([{ role: 'assistant', text: WELCOME }]);
+    }
     setInput('');
-  }, [docType]);
+  }, [docType, storageKey]);
 
   const currentData =
     docType === 'cv'
@@ -154,12 +178,31 @@ const CustomizationPanel = ({
         ],
       };
 
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+      const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
+
+      const response = await fetch(`${API_BASE}/api/ai/chat-edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || data?.error || 'API error');
+      }
       const data = await chatEditDocument(payload);
 
       let updatedDoc = null;
 
       if (data.updatedDocument && typeof data.updatedDocument === 'object') {
         updatedDoc = data.updatedDocument;
+        if (docType === 'cv') {
+          // Flatten objects into strings to prevent React Error #31
+          updatedDoc = mapAICvToPreview(updatedDoc);
+        }
         applyUpdate(updatedDoc);
       }
 
@@ -213,14 +256,15 @@ const CustomizationPanel = ({
 
       <div style={s.chipZone}>
         <div style={s.chipLabel}>Quick actions</div>
-        <div style={s.chipRow}>
+        {/* Horizontal scrollable single-line chip strip */}
+        <div className="chip-slider" style={s.chipRow}>
           {quickActions.map((a) => (
             <button
               key={a.label}
               type="button"
               onClick={() => send(a.prompt)}
               disabled={loading}
-              style={{ ...s.chip, ...(loading ? s.chipDisabled : {}) }}
+              style={{ ...s.chip, ...(loading ? s.chipDisabled : {}), flexShrink: 0 }}
             >
               {a.label}
             </button>
@@ -318,8 +362,11 @@ const CustomizationPanel = ({
 const s = {
   wrap: {
     height: '100%',
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
+    background: 'transparent',
+    fontFamily: "'Inter','Segoe UI',sans-serif",
     background: '#ffffff',
     fontFamily: "'Inter', system-ui, sans-serif",
     overflow: 'hidden',
@@ -330,6 +377,8 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: '14px 16px 12px',
+    borderBottom: '1px solid var(--border-color)',
     padding: '16px 20px',
     borderBottom: '1px solid #f3f4f6',
     background: '#ffffff',
@@ -348,11 +397,21 @@ const s = {
     flexShrink: 0,
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
   },
+  headerTitle: { fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' },
+  headerSub: { fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 },
   headerTitle: { fontSize: 14, fontWeight: 600, color: '#0f172a', letterSpacing: '-0.01em' },
   headerSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
   updateBadge: {
     display: 'inline-flex',
     alignItems: 'center',
+    gap: 4,
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#14b8a6',
+    background: 'rgba(20,184,166,0.1)',
+    border: '1px solid rgba(20,184,166,0.3)',
+    padding: '3px 8px',
+    borderRadius: 20,
     gap: 6,
     fontSize: 11,
     fontWeight: 600,
@@ -364,18 +423,35 @@ const s = {
   },
 
   chipZone: {
+    padding: '8px 14px 6px',
+    borderBottom: '1px solid var(--border-color)',
     padding: '16px 20px',
     borderBottom: '1px solid #f3f4f6',
     background: '#f8fafc',
     flexShrink: 0,
   },
   chipLabel: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: '#94a3b8',
     fontSize: 11,
     fontWeight: 600,
     color: '#475569',
     textTransform: 'uppercase',
+    letterSpacing: '0.07em',
+    marginBottom: 5,
     letterSpacing: '0.04em',
     marginBottom: 10,
+  },
+  // Single-line horizontal scroll — no wrap, hidden scrollbar
+  chipRow: {
+    display: 'flex',
+    flexWrap: 'nowrap',
+    gap: 5,
+    overflowX: 'auto',
+    scrollbarWidth: 'none',   // Firefox
+    msOverflowStyle: 'none',  // IE/Edge
+    paddingBottom: 2,
   },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -432,6 +508,9 @@ const s = {
     alignSelf: 'flex-end',
   },
   bubbleBot: {
+    background: 'var(--card-bg)',
+    color: 'var(--text-primary)',
+    borderRadius: '2px 10px 10px 10px',
     background: '#f8fafc',
     color: '#1e293b',
     borderRadius: '0px 8px 8px 8px',
@@ -443,6 +522,13 @@ const s = {
     border: '1px solid #fca5a5',
   },
   updatedPill: {
+    fontSize: 10,
+    fontWeight: 600,
+    color: '#14b8a6',
+    background: 'rgba(20,184,166,0.1)',
+    border: '1px solid rgba(20,184,166,0.3)',
+    padding: '2px 8px',
+    borderRadius: 20,
     fontSize: 11,
     fontWeight: 500,
     color: '#0f172a',
@@ -458,6 +544,9 @@ const s = {
 
   inputWrap: {
     display: 'flex',
+    gap: 8,
+    padding: '10px 14px 4px',
+    borderTop: '1px solid var(--border-color)',
     gap: 12,
     padding: '16px 20px',
     borderTop: '1px solid #f3f4f6',
@@ -467,6 +556,12 @@ const s = {
   },
   textarea: {
     flex: 1,
+    padding: '9px 11px',
+    borderRadius: 9,
+    border: '1.5px solid var(--border-color)',
+    background: 'var(--bg-color)',
+    fontSize: 12,
+    color: 'var(--text-primary)',
     padding: '12px 14px',
     borderRadius: 8,
     border: '1px solid #cbd5e1',

@@ -1,31 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Design tokens ─────────────────────────────────────────── */
 :root {
-  --bg-color: #080c14;
-  --card-bg: #0f172a;
-  --text-primary: #f8fafc;
-  --text-secondary: #64748b;
-  --border-color: #1e293b;
-  --accent-color: #57d572;
-  --danger-color: #ef4444;
+  /* backgrounds */
+  --bg-color:       #050d12;
+  --surface:        #0a1a22;
+  --card-bg:        #0d2030;
+  --card-hover:     #102638;
+  /* borders */
+  --border-color:   #1a3344;
+  /* text */
+  --text-primary:   #e8f4f8;
+  --text-secondary: #6a96a8;
+  --text-muted:     #3a6070;
+  /* accent — teal + cyan pair */
+  --accent-color:   #14b8a6;
+  --accent-dark:    #0d9488;
+  --accent-glow:    rgba(20, 184, 166, 0.18);
+  --accent-subtle:  rgba(20, 184, 166, 0.1);
+  --cyan:           #0891b2;
+  --cyan-glow:      rgba(8, 145, 178, 0.18);
+  /* semantic */
+  --danger-color:   #f87171;
+  --success-color:  #2dd4bf;
+  --warning-color:  #fbbf24;
+  /* radius */
+  --radius-sm:      8px;
+  --radius-md:      12px;
+  --radius-lg:      16px;
+  /* shadows */
+  --shadow-sm:      0 1px 4px rgba(0,0,0,0.4);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg:      0 12px 40px rgba(0,0,0,0.6);
+  /* layout */
+  --sidebar-width:  220px;
+  --navbar-h:       54px;
+  --transition:     0.18s ease;
 }
 
 [data-theme='light'] {
-  --bg-color: #f1f5f9;
-  --card-bg: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --border-color: #cbd5e1;
+  --bg-color:       #f0f9f8;
+  --surface:        #e0f2f0;
+  --card-bg:        #ffffff;
+  --card-hover:     #f5fffe;
+  --border-color:   #b2d8d4;
+  --text-primary:   #0d2a28;
+  --text-secondary: #3a7068;
+  --text-muted:     #7ab8b0;
+  --accent-glow:    rgba(20, 184, 166, 0.12);
+  --accent-subtle:  rgba(20, 184, 166, 0.08);
+  --success-color:  #14b8a6;
+  --shadow-sm:      0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:      0 12px 40px rgba(0,0,0,0.12);
 }
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ── Scrollbars ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+
+/* ── Toast notifications ───────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  animation: toastIn 0.25s ease;
+  pointer-events: all;
+  box-shadow: var(--shadow-md);
+  min-width: 240px;
+  max-width: 340px;
+}
+.toast-success { background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.3); color: #14b8a6; }
+.toast-error   { background: rgba(248, 113, 113, 0.12); border: 1px solid rgba(248, 113, 113, 0.3); color: #f87171; }
+.toast-info    { background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.3); color: #14b8a6; }
+
+/* ── Form inputs (global) ──────────────────────────────────── */
+.premium-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface);
+  outline: none;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.premium-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.premium-input::placeholder { color: var(--text-muted); }
+textarea.premium-input { resize: vertical; min-height: 88px; line-height: 1.6; }
+
+/* ── Field row hover ───────────────────────────────────────── */
+.premium-field-row { transition: background var(--transition); }
+.premium-field-row:hover { background: var(--card-bg) !important; }
+
+/* ── Remove button ─────────────────────────────────────────── */
+.premium-remove-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 13px;
+  padding: 4px 6px; border-radius: 6px;
+  transition: all var(--transition);
+  line-height: 1;
+}
+.premium-remove-btn:hover { color: var(--danger-color); background: rgba(248,113,113,0.1); }
+
+/* ── Field chip toggle ─────────────────────────────────────── */
+.premium-field-chip { transition: transform var(--transition), box-shadow var(--transition); }
+.premium-field-chip:hover { transform: translateY(-1px); }
+
+/* ── Sidebar nav hover ─────────────────────────────────────── */
+.sidebar-item { transition: background var(--transition), color var(--transition); }
+.sidebar-item:hover { background: var(--card-hover) !important; color: var(--text-primary) !important; }
+
+/* ── Doc card hover ────────────────────────────────────────── */
+.doc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg) !important; }
+
+/* ── Btn hover states ──────────────────────────────────────── */
+.btn-generate:hover { filter: brightness(1.08); }
+.btn-ghost:hover { background: var(--card-hover) !important; color: var(--text-primary) !important; }
+
+/* ── Page fade-in ──────────────────────────────────────────── */
+.page-fade { animation: fadeIn 0.22s ease; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Dashboard & App Shell
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Create layout — stack left/right panels vertically on tablet */
+@media (max-width: 900px) {
+  .create-layout-split {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .create-left-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 55vh;
+  }
+  .create-right-panel {
+    flex: unset !important;
+    height: 60vh;
+  }
+}
+
+/* ── Mobile-only Preview tab: hidden on desktop, shown on mobile */
+.mobile-only-tab { display: none !important; }
+
+/* On desktop, the mobile preview panel is always hidden */
+@media (min-width: 769px) {
+  .mobile-preview-panel { display: none !important; }
+}
+
+/* ── Desktop-only panel: visible on desktop, hidden on mobile */
+.desktop-only-panel { display: flex !important; flex-direction: column; }
+
+/* ── HomeTab hero — stack on mobile */
+@media (max-width: 640px) {
+  .home-hero-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .home-hero-wrap button {
+    width: 100%;
+    justify-content: center;
+  }
+  .stats-row {
+    flex-direction: column !important;
+  }
+  .stats-row > * {
+    flex: unset !important;
+  }
+  .quick-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ── Doc grid — min 1 column on very small screens */
+@media (max-width: 480px) {
+  .doc-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+  .quick-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tab-header-responsive {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tab-header-responsive button {
+    width: 100%;
+  }
+}
+
+/* ── Input container — full height on mobile */
+@media (max-width: 768px) {
+  .input-container-responsive {
+    height: auto !important;
+    min-height: 80vh;
+  }
+  .preview-wrap-responsive {
+    padding: 12px !important;
+  }
+}
+
+/* ── Settings — full-width card on mobile */
+@media (max-width: 540px) {
+  .settings-card-responsive {
+    max-width: 100% !important;
+    padding: 18px !important;
+  }
+}
+
+/* ── Action bar — wrap buttons on small screens */
+@media (max-width: 500px) {
+  .action-bar-responsive {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+}
+
+/* ── Chip slider — hide scrollbar in webkit */
+.chip-slider::-webkit-scrollbar { display: none; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE DASHBOARD — comprehensive responsive overhaul
+   ═══════════════════════════════════════════════════════════ */
+
+/* Mobile navbar: compact, icon-first */
+@media (max-width: 768px) {
+  /* Shrink the top navbar padding */
+  .navbar-responsive {
+    padding: 0 12px !important;
+    height: 50px !important;
+  }
+
+  /* Create page: full-height left panel, right panel hidden */
+  .create-layout-split {
+    flex-direction: column !important;
+    height: calc(100vh - var(--navbar-h)) !important;
+  }
+
+  /* Left panel takes ALL the height on mobile */
+  .create-left-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    max-height: none !important;
+    height: 100% !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Right panel completely hidden — user uses Preview tab instead */
+  .desktop-only-panel {
+    display: none !important;
+  }
+
+  /* Show the mobile-only Preview tab in the tab bar */
+  .mobile-only-tab {
+    display: inline-flex !important;
+  }
+
+  /* Preview panel within left panel fills remaining space */
+  .mobile-preview-panel {
+    display: none; /* default, overridden by inline style when active */
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Tab bar: scrollable horizontal strip, no wrapping */
+  .left-panel-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+  }
+  .left-panel-tabs::-webkit-scrollbar { display: none; }
+
+  /* Template selector: full-screen friendly */
+  .template-browser-modal {
+    flex-direction: column !important;
+  }
+
+  /* Preview on mobile: padding reduced */
+  .preview-wrap-responsive {
+    padding: 8px !important;
+  }
+}
+
+/* Very small phones (360px and below) */
+@media (max-width: 420px) {
+  /* Home tab stats: 2-column grid */
+  .stats-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .quick-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Document cards: single column */
+  .doc-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Settings: full-width cards */
+  .settings-card-responsive {
+    max-width: 100% !important;
+    padding: 16px !important;
+  }
+
+  /* Tab headers: stack vertically */
+  .tab-header-responsive {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .tab-header-responsive button {
+    width: 100%;
+    justify-content: center;
+  }
 }

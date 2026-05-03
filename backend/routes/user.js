@@ -58,6 +58,37 @@ router.put('/profile', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────
+   UPDATE AVATAR (base64 data URL or external URL)
+   Accepts: { avatar: 'data:image/...' | 'https://...' }
+   Limit: 1 MB base64 string (~750 KB image)
+───────────────────────────────────────────── */
+router.put('/avatar', async (req, res) => {
+  try {
+    // Allow null (removal) or a string (data URL / https URL)
+    if (!('avatar' in req.body)) {
+      return res.status(400).json({ message: 'avatar field is required' });
+    }
+
+    const { avatar } = req.body;
+
+    // If a value is provided, validate size — 1 MB of base64 ≈ 750 KB raw image
+    if (avatar && avatar.length > 1_400_000) {
+      return res.status(413).json({ message: 'Image is too large. Please use an image under 1 MB.' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: avatar || null },
+      { new: true, select: '-password' }
+    );
+
+    res.json({ message: avatar ? 'Profile picture updated successfully' : 'Profile picture removed', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update avatar', error: error.message });
+  }
+});
+
+/* ─────────────────────────────────────────────
    CHANGE PASSWORD
 ───────────────────────────────────────────── */
 router.put('/change-password', async (req, res) => {

@@ -1,9 +1,12 @@
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
-import { useReactToPrint } from 'react-to-print';
+import html2pdf from 'html2pdf.js';
+import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 import Sidebar from '../../components/common/Sidebar';
 import Navbar from '../../components/common/Navbar';
@@ -16,6 +19,7 @@ import TemplateSelector from '../../components/template/TemplateSelector';
 import CVPreview from '../../components/document/CVPreview';
 import CoverLetterPreview from '../../components/document/CoverLetterPreview';
 import ProposalPreview from '../../components/document/ProposalPreview';
+import DocumentWizard from '../../components/document/DocumentWizard';
 
 import HomeTab from './HomeTab';
 import AdminDashboardPage from '../admin/AdminDashboardPage';
@@ -24,59 +28,9 @@ import SettingsTab from './SettingsTab';
 import { useDocuments } from '../../hooks/useDocuments';
 import { useUI } from '../../hooks/useUI';
 import { useAI } from '../../hooks/useAI';
+import { mapAICvToPreview } from '../../utils/cvMapper';
 
-const safe = (v) => {
-  if (!v) return '';
-  if (typeof v === 'string') return v;
-  if (typeof v === 'object') return v.label || v.value || v.name || v.school || v.degree || '';
-  return String(v);
-};
 
-const mapAICvToPreview = (content) => ({
-  name: safe(content?.basics?.name),
-  phone: safe(content?.basics?.phone),
-  email1: safe(content?.basics?.email),
-  email2: safe(content?.basics?.email2),
-  linkedin: safe(content?.basics?.linkedin),
-  title: safe(content?.basics?.title || content?.basics?.role || content?.basics?.headline),
-  location: safe(content?.basics?.location || content?.basics?.address || content?.basics?.city),
-  summary: safe(content?.basics?.summary),
-  skills: Array.isArray(content?.skills) ? content.skills.map(safe).filter(Boolean) : [],
-  education: Array.isArray(content?.education)
-    ? content.education
-      .map((edu) =>
-        typeof edu === 'string'
-          ? edu
-          : [
-            safe(edu.degree),
-            safe(edu.institution || edu.school || edu.university),
-            safe(edu.date || edu.year || edu.graduationDate),
-          ]
-            .filter(Boolean)
-            .join(' - ')
-      )
-      .filter(Boolean)
-    : [],
-  experience: Array.isArray(content?.work)
-    ? content.work.map((job) => ({
-      company: safe(job.company),
-      period: safe(job.period || job.duration || job.dates),
-      role: safe(job.role || job.position || job.jobTitle),
-      bullets: Array.isArray(job.bullets)
-        ? job.bullets.map(safe).filter(Boolean)
-        : Array.isArray(job.achievements)
-          ? job.achievements.map(safe).filter(Boolean)
-          : job.description
-            ? [safe(job.description)]
-            : [],
-    }))
-    : [],
-  projects: Array.isArray(content?.projects) ? content.projects.map(safe).filter(Boolean) : [],
-  certifications: Array.isArray(content?.certifications)
-    ? content.certifications.map(safe).filter(Boolean)
-    : [],
-  references: safe(content?.references) || 'Available upon request',
-});
 
 const FIELD_CATALOGUE = {
   cv: [
@@ -199,9 +153,9 @@ const FieldPicker = ({ catalogue, activeKeys, onToggle }) => {
                 userSelect: 'none',
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 borderColor: on ? 'var(--accent-color)' : 'var(--border-color)',
-                background: on ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                background: on ? 'var(--accent-subtle)' : 'transparent',
                 color: on ? 'var(--accent-color)' : 'var(--text-secondary)',
-                boxShadow: on ? '0 0 10px rgba(59, 130, 246, 0.15)' : 'none',
+                boxShadow: on ? '0 0 10px var(--accent-glow)' : 'none',
               }}
             >
               <span>{f.label}</span>
@@ -253,7 +207,7 @@ const FieldRow = ({ field, value, onChange, onRemove }) => {
         <label style={{ display: 'flex', alignItems: 'center', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', gap: 8, fontFamily: "'Inter', sans-serif" }}>
           {field.label}
           {field.core && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#3b82f6', background: 'rgba(59, 130, 246, 0.15)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#14b8a6', background: 'rgba(20, 184, 166, 0.15)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Required
             </span>
           )}
@@ -286,26 +240,33 @@ const FieldRow = ({ field, value, onChange, onRemove }) => {
   );
 };
 
-const RightPanelTabs = ({ active, onChange }) => {
+const LeftPanelTabs = ({ active, onChange }) => {
   const tabs = [
-    { id: 'preview', label: 'Preview', icon: <EyeIcon /> },
-    { id: 'style', label: 'AI Edit', icon: <EditIcon /> },
+    { id: 'edit', label: 'Form', icon: <EditIcon /> },
+    { id: 'style', label: 'AI Edit', icon: (
+      <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    ) },
     { id: 'templates', label: 'Templates', icon: <ThemeIcon /> },
+    // Preview tab — only shown on mobile via CSS
+    { id: 'preview', label: 'Preview', icon: <EyeIcon />, mobileOnly: true },
   ];
 
   return (
-    <div style={{ display: 'flex', background: 'transparent', padding: '0 20px', gap: 4, flexShrink: 0 }}>
+    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', padding: '0 20px', gap: 0, flexShrink: 0 }}>
       {tabs.map((t) => (
         <button
           key={t.id}
           onClick={() => onChange(t.id)}
+          className={t.mobileOnly ? 'mobile-only-tab' : ''}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            padding: '14px 16px',
-            fontSize: 13,
-            fontWeight: 600,
+            padding: '12px 16px',
+            fontSize: 12,
+            fontWeight: 500,
             border: 'none',
             background: 'none',
             cursor: 'pointer',
@@ -314,6 +275,8 @@ const RightPanelTabs = ({ active, onChange }) => {
             marginBottom: -1,
             transition: 'color 0.15s, border-color 0.15s',
             fontFamily: 'inherit',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           {t.icon}
@@ -326,8 +289,9 @@ const RightPanelTabs = ({ active, onChange }) => {
 
 const DashboardPage = () => {
   const { user, logoutUser } = useAuth();
+  const toast = useToast();
 
-  const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen } = useUI();
+  const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen, isMobile } = useUI();
   const { documents, loadingDocuments, loadDocuments, saveDocument, deleteDocument } = useDocuments();
   const { aiLoading, handleGenerate } = useAI();
 
@@ -337,38 +301,40 @@ const DashboardPage = () => {
   const [theme, setTheme] = useState('Modern');
   const [fontSize, setFontSize] = useState('12 pt');
   const [fontFamily, setFontFamily] = useState('Inter');
-  const [accentColor, setAccentColor] = useState('#2563eb');
+  const [accentColor, setAccentColor] = useState('#14b8a6');
   const [spacing, setSpacing] = useState('normal');
   const [paperSize, setPaperSize] = useState('A4');
   const [showPageNumbers, setShowPageNumbers] = useState(false);
   const [showWatermark, setShowWatermark] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [rightTab, setRightTab] = useState('preview');
+  const [leftTab, setLeftTab] = useState('edit');
   const [createStep, setCreateStep] = useState('input');
 
+  // Pre-fill data with the logged-in user's info so templates are never empty by default
   const [cvData, setCvData] = useState({
-    name: '',
-    phone: '',
-    email1: '',
-    email2: '',
-    linkedin: '',
-    title: '',
-    location: '',
-    summary: '',
-    skills: [],
-    education: [],
-    experience: [],
-    projects: [],
-    certifications: [],
-    references: '',
+    avatar: user?.profileData?.avatar || user?.avatar || '',
+    name: user?.profileData?.name || user?.name || '',
+    phone: user?.profileData?.phone || '',
+    email1: user?.profileData?.email1 || user?.profileData?.email || user?.email || '',
+    email2: user?.profileData?.email2 || '',
+    linkedin: user?.profileData?.linkedin || '',
+    title: user?.profileData?.title || '',
+    location: user?.profileData?.location || '',
+    summary: user?.profileData?.summary || '',
+    skills: user?.profileData?.skills || [],
+    education: user?.profileData?.education || [],
+    experience: user?.profileData?.experience || [],
+    projects: user?.profileData?.projects || [],
+    certifications: user?.profileData?.certifications || [],
+    references: user?.profileData?.references || '',
   });
 
   const [coverLetterData, setCoverLetterData] = useState({
-    senderName: '',
-    senderTitle: '',
-    senderLocation: '',
-    senderEmail: '',
-    date: '',
+    senderName: user?.profileData?.senderName || user?.profileData?.name || user?.name || '',
+    senderTitle: user?.profileData?.senderTitle || user?.profileData?.title || '',
+    senderLocation: user?.profileData?.senderLocation || user?.profileData?.location || '',
+    senderEmail: user?.profileData?.senderEmail || user?.profileData?.email1 || user?.email || '',
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     recipientName: '',
     recipientTitle: '',
     companyName: '',
@@ -380,15 +346,15 @@ const DashboardPage = () => {
     body3: '',
     closing: '',
     signoff: 'Sincerely,',
-    signature: '',
+    signature: user?.profileData?.name || user?.name || '',
   });
 
   const [proposalData, setProposalData] = useState({
     title: '',
     subtitle: 'Technical Proposal',
-    preparedBy: '',
+    preparedBy: user?.profileData?.preparedBy || user?.profileData?.name || user?.name || '',
     preparedFor: '',
-    date: '',
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     version: 'v1.0',
     executiveSummary: '',
     problemStatement: '',
@@ -398,8 +364,8 @@ const DashboardPage = () => {
     budget: '',
     validity: '',
     closingNote: '',
-    contactName: '',
-    contactEmail: '',
+    contactName: user?.profileData?.contactName || user?.profileData?.name || user?.name || '',
+    contactEmail: user?.profileData?.contactEmail || user?.profileData?.email1 || user?.email || '',
   });
 
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -450,6 +416,8 @@ const DashboardPage = () => {
   };
 
   const onGenerateAI = async () => {
+    // Always force a fresh generation — pass a unique requestId so the hook
+    // treats every call as distinct even if currentFields hasn't changed.
     await handleGenerate({
       docType,
       currentFields,
@@ -457,6 +425,7 @@ const DashboardPage = () => {
       setCoverLetterData,
       setProposalData,
       mapAICvToPreview,
+      requestId: Date.now(), // forces re-run on subsequent clicks
     });
   };
 
@@ -478,15 +447,20 @@ const DashboardPage = () => {
 
     const saved = await saveDocument(payload);
     if (saved) {
-      alert(`${category} saved successfully!`);
+      toast(`${category} saved successfully!`, 'success');
       loadDocuments();
+    } else {
+      toast('Failed to save document', 'error');
     }
   };
 
   const handleDeleteDocument = async (id) => {
     const ok = await deleteDocument(id);
     if (ok) {
+      toast('Document deleted successfully', 'success');
       loadDocuments();
+    } else {
+      toast('Failed to delete document', 'error');
     }
   };
 
@@ -524,185 +498,139 @@ const DashboardPage = () => {
     setCreateStep('preview');
   };
 
-  const reactToPrintFn = useReactToPrint({
-    contentRef: previewRef,
-    documentTitle: `${docType}_document`,
-    onBeforeGetContent: () => setPdfLoading(true),
-    onAfterPrint: () => setPdfLoading(false),
-    onPrintError: () => {
-      setPdfLoading(false);
-      alert('PDF export failed');
-    }
-  });
-
   const handleDownloadPDF = async () => {
-    reactToPrintFn();
+    try {
+      setPdfLoading(true);
+      if (!previewRef.current) throw new Error('Preview not found');
+
+      const element = previewRef.current;
+      
+      let filename = 'document';
+      if (docType === 'cv') filename = cvData.name ? `${cvData.name}_CV` : 'CV';
+      else if (docType === 'cover_letter') filename = coverLetterData.senderName ? `${coverLetterData.senderName}_Cover_Letter` : 'Cover_Letter';
+      else if (docType === 'business_proposal') filename = proposalData.title ? `${proposalData.title}_Proposal` : 'Proposal';
+
+      const opt = {
+        margin:       0,
+        filename:     `${filename.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: paperSize === 'Letter' ? 'letter' : 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      toast('PDF exported successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('PDF export failed', 'error');
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const handleDownloadWord = async () => {
     try {
       setWordLoading(true);
 
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [new TextRun({ text: cvData.name || '', bold: true, size: 36, color: '1e3a5f' })],
-                spacing: { after: 80 },
-              }),
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [new TextRun({ text: cvData.title || '', size: 22, color: '555555' })],
-                spacing: { after: 60 },
-              }),
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [new TextRun({ text: `${cvData.location || ''} | ${cvData.email1 || ''} | ${cvData.phone || ''}`, size: 18, color: '777777' })],
-                spacing: { after: 200 },
-              }),
-              new Paragraph({
-                border: {
-                  bottom: { style: BorderStyle.SINGLE, size: 6, color: '1e3a5f' },
-                },
-                spacing: { after: 160 },
-              }),
-              new Paragraph({
-                children: [new TextRun({ text: 'SUMMARY', bold: true, size: 22, color: '1e3a5f' })],
-                spacing: { after: 80 },
-              }),
-              new Paragraph({
-                children: [new TextRun({ text: cvData.summary || '', size: 20, color: '333333' })],
-                spacing: { after: 200 },
-              }),
-            ],
-          },
-        ],
-      });
+      if (!previewRef.current) throw new Error('Preview not found');
 
-      saveAs(await Packer.toBlob(doc), `${(cvData.name || 'document').replace(/\s+/g, '_')}_CV.docx`);
-    } catch {
-      alert('Word export failed');
+      let filename = 'document';
+      if (docType === 'cv') filename = cvData.name ? `${cvData.name}_CV` : 'CV';
+      else if (docType === 'cover_letter') filename = coverLetterData.senderName ? `${coverLetterData.senderName}_Cover_Letter` : 'Cover_Letter';
+      else if (docType === 'business_proposal') filename = proposalData.title ? `${proposalData.title}_Proposal` : 'Proposal';
+
+      const pageW = paperSize === 'A4' ? '210mm' : '8.5in';
+      const pageH = paperSize === 'A4' ? '297mm' : (paperSize === 'Legal' ? '14in' : '11in');
+
+      const html = `
+<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'>
+  <title>${filename.replace(/_/g, ' ')}</title>
+  <style>
+    @page {
+      size: ${pageW} ${pageH};
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: ${pageW};
+      height: ${pageH};
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    body > * {
+      page-break-inside: avoid;
+    }
+    /* Preserve inline styles from the React component */
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div style="width:${pageW};height:${pageH};overflow:hidden;display:flex;flex-direction:column;">
+    ${previewRef.current.innerHTML}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      saveAs(blob, `${filename.replace(/\s+/g, '_')}.doc`);
+      toast('Word document downloaded!', 'success');
+    } catch (err) {
+      toast('Word export failed', 'error');
     } finally {
       setWordLoading(false);
     }
   };
 
-  const renderPreview = useCallback(
-    (overrideTheme) => {
-      const t = overrideTheme || theme;
+  const renderPreview = useCallback((overrideTheme) => {
+    const t = overrideTheme || theme || 'modern';
 
-      if (category === 'Cover Letter') {
-        return (
-          <CoverLetterPreview
-            data={coverLetterData}
-            onDataChange={setCoverLetterData}
-            theme={t}
-            fontSize={fontSize}
-            fontFamily={fontFamily}
-            spacing={spacing}
-            accentColor={accentColor}
-            editMode={editMode}
-          />
-        );
-      }
+    const sharedProps = {
+      theme: t,
+      fontSize,
+      fontFamily,
+      spacing,
+      accentColor,
+      editMode,
+      paperSize,
+      showPageNumbers,
+      showWatermark,
+    };
 
-      if (category === 'Proposal') {
-        return (
-          <ProposalPreview
-            data={proposalData}
-            onDataChange={setProposalData}
-            theme={t}
-            fontSize={fontSize}
-            fontFamily={fontFamily}
-            spacing={spacing}
-            accentColor={accentColor}
-            editMode={editMode}
-          />
-        );
-      }
-
-      return (
-        <CVPreview
-          data={cvData}
-          onDataChange={setCvData}
-          theme={t}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-          spacing={spacing}
-          accentColor={accentColor}
-          editMode={editMode}
-        />
-      );
-    },
-    [category, coverLetterData, proposalData, cvData, theme, fontSize, fontFamily, spacing, accentColor, editMode]
-  );
+    if (category === 'Cover Letter') {
+      return <CoverLetterPreview data={coverLetterData} onDataChange={setCoverLetterData} {...sharedProps} />;
+    }
+    if (category === 'Proposal') {
+      return <ProposalPreview data={proposalData} onDataChange={setProposalData} {...sharedProps} />;
+    }
+    return <CVPreview data={cvData} onDataChange={setCvData} {...sharedProps} />;
+  }, [category, coverLetterData, proposalData, cvData, theme, fontSize, fontFamily, spacing, accentColor, editMode, paperSize, showPageNumbers, showWatermark]);
 
   const renderForm = () => {
-    const catalogue = FIELD_CATALOGUE[docType] || [];
-    const activeKeys = activeFieldKeys[docType] || [];
-    const visible = catalogue.filter((f) => f.core || activeKeys.includes(f.key));
-
-    const getVal = (key) => {
-      const v = currentFields[key];
-      if (v === undefined || v === null) return '';
-
-      if (key === 'experience' && Array.isArray(v)) {
-        return v
-          .map((e) => {
-            const h = [e.role, e.company, e.period].filter(Boolean).join(' · ');
-            const b = Array.isArray(e.bullets) ? e.bullets.join('\n') : '';
-            return [h, b].filter(Boolean).join('\n');
-          })
-          .join('\n\n');
-      }
-
-      return v;
-    };
-
-    const handleChange = (field, raw) => {
-      if (field.key === 'experience' && docType === 'cv' && typeof raw === 'string') {
-        const blocks = raw.split(/\n\n+/).filter(Boolean);
-        const parsed = blocks.map((block) => {
-          const lines = block.split('\n').filter(Boolean);
-          const parts = (lines[0] || '').split('·').map((p) => p.trim());
-
-          return {
-            role: parts[0] || '',
-            company: parts[1] || '',
-            period: parts[2] || '',
-            bullets: lines.slice(1),
-          };
-        });
-
-        updateField('experience', parsed.length ? parsed : [{ role: raw, company: '', period: '', bullets: [] }]);
-      } else {
-        updateField(field.key, raw);
-      }
-    };
-
     return (
-      <div>
-        <FieldPicker catalogue={catalogue} activeKeys={activeKeys} onToggle={toggleField} />
-
-        {visible.map((field) => (
-          <FieldRow
-            key={field.key}
-            field={field}
-            value={getVal(field.key)}
-            onChange={(v) => handleChange(field, v)}
-            onRemove={() => toggleField(field.key)}
-          />
-        ))}
-
-        {visible.length === catalogue.filter((f) => f.core).length && (
-          <div style={{ padding: '22px 18px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
-            ↑ Add fields above to build your document
-          </div>
-        )}
-      </div>
+      <DocumentWizard
+        docType={docType}
+        data={currentFields}
+        onDataChange={(newData) => {
+          if (docType === 'cv') setCvData(typeof newData === 'function' ? newData(cvData) : newData);
+          else if (docType === 'cover_letter') setCoverLetterData(typeof newData === 'function' ? newData(coverLetterData) : newData);
+          else setProposalData(typeof newData === 'function' ? newData(proposalData) : newData);
+        }}
+        onGenerateAI={onGenerateAI}
+        aiLoading={aiLoading}
+        onNextStep={() => {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          handleSaveDraft();
+          setLeftTab('edit');
+        }}
+      />
     );
   };
 
@@ -714,6 +642,8 @@ const DashboardPage = () => {
         isOpen={sidebarOpen}
         user={user}
         onLogout={logoutUser}
+        isMobileOverlay={isMobile}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <div style={s.main}>
@@ -724,11 +654,12 @@ const DashboardPage = () => {
           activeTab={activeTab}
           onSaveDraft={handleSaveDraft}
           showSaveButton={activeTab === 'create'}
+          onOpenSettings={() => setActiveTab('settings')}
         />
 
         <div style={s.content}>
           {activeTab === 'home' && (
-            <div style={s.tabPage}>
+            <div style={s.tabPage} className="page-fade">
               <HomeTab
                 user={user}
                 documents={documents}
@@ -738,9 +669,10 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {activeTab === 'create' && createStep === 'input' && (
-            <div style={s.inputStepLayout}>
-              <div style={s.inputContainer}>
+          {activeTab === 'create' && (
+            <div style={s.createLayout} className="create-layout-split">
+              {/* LEFT PANEL - WIZARD / AI / TEMPLATES / MOBILE PREVIEW */}
+              <div style={s.leftPanel} className="create-left-panel">
                 <div style={s.leftHeader}>
                   <DocumentEditor
                     category={category}
@@ -784,9 +716,9 @@ const DashboardPage = () => {
           {activeTab === 'create' && createStep === 'preview' && (
             <div style={s.createLayout}>
               <div style={s.rightPanel}>
-                <div style={{ display: 'flex', alignItems: 'center', background: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', paddingRight: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#080c14', paddingRight: '20px' }}>
                   <button
-                    style={{ ...s.btnGhost, margin: '12px 20px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', borderRadius: 8, padding: '8px 16px', fontWeight: 600 }}
+                    style={{ ...s.btnGhost, margin: '12px 20px', border: 'none', background: '#1e293b', color: '#e2e8f0' }}
                     onClick={() => setCreateStep('input')}
                   >
                     ← Back to Form
@@ -829,42 +761,89 @@ const DashboardPage = () => {
                     </div>
                   )}
 
-                  {rightTab === 'templates' && (
-                    <div style={s.panelScroll}>
-                      <TemplateSelector
-                        theme={theme}
-                        onThemeChange={setTheme}
-                        fontSize={fontSize}
-                        onFontSizeChange={setFontSize}
-                        fontFamily={fontFamily}
-                        onFontFamilyChange={setFontFamily}
-                        accentColor={accentColor}
-                        onAccentChange={setAccentColor}
-                        spacing={spacing}
-                        onSpacingChange={setSpacing}
-                        paperSize={paperSize}
-                        onPaperSizeChange={setPaperSize}
-                        showPageNumbers={showPageNumbers}
-                        onShowPageNumbersChange={setShowPageNumbers}
-                        showWatermark={showWatermark}
-                        onShowWatermarkChange={setShowWatermark}
-                        onDownloadPDF={handleDownloadPDF}
-                        pdfLoading={pdfLoading}
-                        onDownloadWord={handleDownloadWord}
-                        wordLoading={wordLoading}
-                        thumbnail={renderPreview()}
-                        renderPreview={renderPreview}
-                      />
-                    </div>
-                  )}
+                <div style={{ ...s.formScroll, display: leftTab === 'templates' ? 'flex' : 'none', padding: 0 }}>
+                  <TemplateSelector
+                    theme={theme}
+                    onThemeChange={setTheme}
+                    fontSize={fontSize}
+                    onFontSizeChange={setFontSize}
+                    fontFamily={fontFamily}
+                    onFontFamilyChange={setFontFamily}
+                    accentColor={accentColor}
+                    onAccentChange={setAccentColor}
+                    spacing={spacing}
+                    onSpacingChange={setSpacing}
+                    paperSize={paperSize}
+                    onPaperSizeChange={setPaperSize}
+                    showPageNumbers={showPageNumbers}
+                    onShowPageNumbersChange={setShowPageNumbers}
+                    showWatermark={showWatermark}
+                    onShowWatermarkChange={setShowWatermark}
+                    onDownloadPDF={handleDownloadPDF}
+                    pdfLoading={pdfLoading}
+                    onDownloadWord={handleDownloadWord}
+                    wordLoading={wordLoading}
+                    thumbnail={<div style={{ width: '100%', height: '100%', transform: 'scale(0.3)', transformOrigin: 'top left' }}>{renderPreview()}</div>}
+                    renderPreview={renderPreview}
+                  />
+                </div>
+
+                {/* Mobile-only preview tab content */}
+                <div className="mobile-preview-panel" style={{ display: leftTab === 'preview' ? 'flex' : 'none', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid var(--border-color)', background: 'var(--card-bg)', gap: 8 }}>
+                    <button
+                      style={{ ...s.btnGhost, fontSize: 12, padding: '6px 12px', ...(pdfLoading ? s.btnDisabled : {}) }}
+                      onClick={handleDownloadPDF}
+                      disabled={pdfLoading}
+                    >
+                      <PdfIcon />
+                      <span>{pdfLoading ? 'Exporting…' : 'Export PDF'}</span>
+                    </button>
+                  </div>
+                  <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'var(--bg-color)' }}>
+                    <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)} paperSize={paperSize}>
+                      {renderPreview()}
+                    </DocumentPreview>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT PANEL - PREVIEW (hidden on mobile, always visible on desktop) */}
+              <div style={s.rightPanel} className="create-right-panel desktop-only-panel">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '12px 16px' }}>
+                  <div style={{ display: 'flex', gap: 7 }}>
+                    <button
+                      style={{ ...s.btnGhost, ...(pdfLoading ? s.btnDisabled : {}) }}
+                      onClick={handleDownloadPDF}
+                      disabled={pdfLoading}
+                    >
+                      {pdfLoading ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                      ) : (
+                        <PdfIcon />
+                      )}
+                      <span>{pdfLoading ? 'Exporting…' : 'Export PDF'}</span>
+                    </button>
+                    <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                  </div>
+                </div>
+
+                <div style={s.rightContent}>
+                  <div style={s.previewWrap} className="preview-wrap-responsive">
+                    <DocumentPreview ref={previewRef} editMode={editMode} onToggleEditMode={() => setEditMode((p) => !p)} paperSize={paperSize}>
+                      {renderPreview()}
+                    </DocumentPreview>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'documents' && (
-            <div style={s.tabPage}>
-              <div style={s.tabHeader}>
+            <div style={s.tabPage} className="page-fade">
+              <div style={s.tabHeader} className="tab-header-responsive">
                 <div>
                   <h2 style={s.tabTitle}>My Documents</h2>
                   <p style={s.tabSubtitle}>Manage and resume your saved work</p>
@@ -878,21 +857,21 @@ const DashboardPage = () => {
               {loadingDocuments && (
                 <div style={s.emptyState}>
                   <div style={s.spinner} />
-                  <p style={{ color: '#475569', marginTop: 14 }}>Loading…</p>
+                  <p style={{ color: 'var(--text-secondary)', marginTop: 14 }}>Loading…</p>
                 </div>
               )}
 
               {!loadingDocuments && documents.length === 0 && (
                 <div style={s.emptyState}>
-                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8', marginBottom: 14 }}>
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', marginBottom: 14 }}>
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                     <polyline points="10 9 9 9 8 9"></polyline>
                   </svg>
-                  <h3 style={{ color: '#94a3b8', fontWeight: 600, margin: '0 0 8px' }}>No documents yet</h3>
-                  <p style={{ color: '#475569', fontSize: 13, margin: '0 0 20px' }}>Create your first document to get started</p>
+                  <h3 style={{ color: 'var(--text-secondary)', fontWeight: 600, margin: '0 0 8px' }}>No documents yet</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 20px' }}>Create your first document to get started</p>
                   <button style={s.btnGenerate} onClick={() => setActiveTab('create')}>
                     Create one →
                   </button>
@@ -903,39 +882,44 @@ const DashboardPage = () => {
                 <div style={s.docGrid}>
                   {documents.map((doc) => {
                     const dt = doc.type || 'cv';
-                    const badgePalette = {
-                      cv: ['#1e3a8a', '#60a5fa'],
-                      cover_letter: ['#052e16', '#4ade80'],
-                      business_proposal: ['#422006', '#fbbf24'],
-                    };
+                    const typeColors = { cv: '#14b8a6', cover_letter: '#0891b2', business_proposal: '#f59e0b' };
+                    const badgeFg = typeColors[dt] || '#94a3b8';
+                    const badgeBg = `${badgeFg}18`;
 
-                    const [badgeBg, badgeFg] = badgePalette[dt] || ['#1e293b', '#94a3b8'];
+                    const docTheme = doc.theme || 'modern';
+                    const docContent = doc.content || {};
+                    const docAccent = doc.accentColor || '#14b8a6';
+                    const docFontSize = doc.fontSize || 11;
 
                     return (
                       <div
                         key={doc._id || doc.id}
+                        className="doc-card"
                         style={s.docCard}
                         onClick={() => handleOpenDocument(doc)}
                       >
+                        {/* Mini preview thumbnail */}
                         <div
                           style={{
-                            height: 70,
-                            background: `linear-gradient(135deg,${accentColor}22,${accentColor}08)`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderBottom: '1px solid #0f172a',
+                            height: 130,
+                            overflow: 'hidden',
+                            background: '#fff',
+                            borderBottom: '1px solid var(--border-color)',
+                            position: 'relative',
+                            cursor: 'pointer',
                           }}
                         >
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ position: 'absolute', top: 0, left: 0, width: '340%', height: '340%', transformOrigin: 'top left', transform: 'scale(0.294)', pointerEvents: 'none' }}>
                             {dt === 'cv' ? (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                              <CVPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             ) : dt === 'cover_letter' ? (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                              <CoverLetterPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             ) : (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                              <ProposalPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             )}
-                          </span>
+                          </div>
+                          {/* overlay to block interactions */}
+                          <div style={{ position: 'absolute', inset: 0 }} />
                         </div>
 
                         <div style={{ padding: '12px 14px', flex: 1 }}>
@@ -956,16 +940,16 @@ const DashboardPage = () => {
                             {dt.replace('_', ' ')}
                           </div>
 
-                          <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 13, marginBottom: 4 }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13, marginBottom: 4 }}>
                             {doc.title}
                           </div>
 
-                          <div style={{ fontSize: 11, color: '#334155' }}>
-                            Saved {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : doc.savedAt}
+                          <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                            Saved {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : doc.savedAt}
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: 7, padding: '10px 14px', borderTop: '1px solid #0f172a' }}>
+                        <div style={{ display: 'flex', gap: 7, padding: '10px 14px', borderTop: '1px solid var(--border-color)' }}>
                           <button
                             style={s.btnOpenDoc}
                             onClick={(e) => {
@@ -1015,6 +999,7 @@ const s = {
     background: 'var(--bg-color)',
     color: 'var(--text-primary)',
     overflow: 'hidden',
+    position: 'relative',
   },
 
   main: {
@@ -1132,7 +1117,7 @@ const s = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    background: 'linear-gradient(135deg, var(--accent-color), #2563eb)',
+    background: 'var(--accent-color)',
     color: '#fff',
     border: 'none',
     padding: '9px 16px',
@@ -1167,7 +1152,7 @@ const s = {
   },
 
   tabPage: {
-    padding: '32px 36px',
+    padding: 'clamp(16px, 4vw, 36px)',
     flex: 1,
     overflow: 'auto',
   },
@@ -1215,7 +1200,7 @@ const s = {
 
   btnOpenDoc: {
     flex: 1,
-    background: 'rgba(59, 130, 246, 0.1)',
+    background: 'var(--accent-subtle)',
     color: 'var(--accent-color)',
     border: 'none',
     borderRadius: 6,

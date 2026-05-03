@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.15" />
+    </filter>
+  </defs>
+  
+  <rect x="15" y="10" width="70" height="80" rx="16" fill="url(#tealGrad)" filter="url(#shadow)" />
+  
+  <path d="M 35 30 L 65 30" stroke="#ffffff" stroke-width="6" stroke-linecap="round" />
+  <path d="M 35 50 L 55 50" stroke="#ffffff" stroke-width="6" stroke-linecap="round" />
+  <path d="M 35 70 L 65 70" stroke="#ffffff" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Sparkle/Star shape at the top right -->
+  <path d="M 75 15 Q 85 15 85 5 Q 85 15 95 15 Q 85 15 85 25 Q 85 15 75 15" fill="#facc15" />
+</svg>

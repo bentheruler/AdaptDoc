@@ -33,7 +33,7 @@ const DocumentEditor = ({ category, onCategoryChange, editMode, onToggleEditMode
       {/* Save draft */}
       <button
         onClick={handleSave}
-        style={{ background: saveFeedback ? '#16a34a' : '#1e3a5f', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 18px', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: 6 }}
+        style={{ background: saveFeedback ? '#0d9488' : '#1e3a5f', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 18px', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: 6 }}
       >
         {saveFeedback ? '✅ Saved!' : '💾 Save Draft'}
       </button>

@@ -4,7 +4,7 @@ import { THEME_LIST, THEME_CONFIGS, FONT_SIZES } from '../../constants';
 
 const PRESET_COLORS = [
   '#0d9488','#0ea5e9','#6366f1','#8b5cf6','#ec4899',
-  '#ef4444','#f97316','#eab308','#22c55e','#1e3a5f',
+  '#ef4444','#f97316','#eab308','#34d399','#1e3a5f',
   '#64748b','#0891b2','#374151','#000000',
 ];
 const SPACING_PRESETS = [
@@ -20,224 +20,173 @@ const Check = () => <svg width={12} height={12} viewBox="0 0 24 24" fill="none" 
 const Download = () => <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
 
 /* ══════════════════════════════════════════════════
-   RICH PLACEHOLDER PREVIEW
-   Renders a realistic-looking CV with placeholder
-   content specific to each theme's visual style.
-   No actual user data needed.
+   (Abstract placeholder previews removed in favor of real previews)
 ══════════════════════════════════════════════════ */
-const PlaceholderPreview = ({ name, accent }) => {
-  const isDark  = name === 'Tech';
-  const isSplit = ['Modern','Creative','Timeline','Infographic','Sunset'].includes(name);
-  const isTwoCol= name === 'Academic' || name === 'Chicago';
-  const isCenter= ['Classic','Elegant'].includes(name);
-  const bg      = isDark ? '#0d1117' : ['Classic'].includes(name) ? '#fffef9' : ['Minimal','Nordic'].includes(name) ? '#fafafa' : '#fff';
-
-  const mutedColor = isDark ? '#8b949e' : '#94a3b8';
-  const lineColor  = isDark ? '#30363d' : '#e2e8f0';
-
-  /* accent bar colors for gradient themes */
-  const headerBg = ['Bold','Corporate','Executive'].includes(name) ? '#0f172a'
-    : name === 'Tech' ? '#161b22'
-    : name === 'Sunset' ? `linear-gradient(135deg,${accent},#f97316)`
-    : isSplit ? accent
-    : 'transparent';
-
-  /* fake content lines */
-  const Lines = ({ widths, color, height = 3, gap = 4, mb = 0 }) => (
-    <div style={{ marginBottom: mb }}>
-      {widths.map((w, i) => (
-        <div key={i} style={{ height, width: `${w}%`, borderRadius: 2, background: color || lineColor, marginBottom: gap }} />
-      ))}
-    </div>
-  );
-
-  /* Skill pills */
-  const Pills = ({ count, color }) => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 4 }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} style={{ height: 8, width: [28,36,24,32,20,38][i % 6], borderRadius: 4, background: color || `${accent}30` }} />
-      ))}
-    </div>
-  );
-
-  return (
-    <div style={{ width: '100%', height: '100%', background: bg, overflow: 'hidden', fontFamily: 'sans-serif', position: 'relative' }}>
-
-      {/* ── header band ── */}
-      {headerBg !== 'transparent' ? (
-        <div style={{ background: headerBg, padding: isSplit ? '10px 8px 8px' : '8px 10px', position: 'relative' }}>
-          {/* accent top strip */}
-          {['Bold','Corporate','Executive','Tech'].includes(name) && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: accent }} />
-          )}
-          <div style={{ height: 6, width: '55%', borderRadius: 2, background: 'rgba(255,255,255,0.75)', marginBottom: 3 }} />
-          <div style={{ height: 3, width: '35%', borderRadius: 2, background: name === 'Executive' ? accent : 'rgba(255,255,255,0.4)', marginBottom: 4 }} />
-          <div style={{ display: 'flex', gap: 6 }}>
-            {[40, 50, 36].map((w, i) => <div key={i} style={{ height: 2, width: w, borderRadius: 1, background: 'rgba(255,255,255,0.3)' }} />)}
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '8px 10px', borderBottom: `${isCenter ? '1.5px' : '1px'} solid ${accent}${isCenter ? '' : '40'}`, textAlign: isCenter ? 'center' : 'left' }}>
-          <div style={{ height: isCenter ? 7 : 6, width: isCenter ? '60%' : '55%', borderRadius: 2, background: name === 'Nordic' ? '#111' : accent, marginBottom: 3, ...(isCenter ? { margin: '0 auto 3px' } : {}) }} />
-          <div style={{ height: 3, width: '35%', borderRadius: 2, background: mutedColor, opacity: 0.5, ...(isCenter ? { margin: '0 auto 4px' } : { marginBottom: 4 }) }} />
-          <div style={{ display: 'flex', gap: 6, justifyContent: isCenter ? 'center' : 'flex-start' }}>
-            {[38, 48, 32].map((w, i) => <div key={i} style={{ height: 2, width: w, borderRadius: 1, background: mutedColor, opacity: 0.4 }} />)}
-          </div>
-        </div>
-      )}
-
-      {/* ── body ── */}
-      {isSplit ? (
-        <div style={{ display: 'flex', height: 'calc(100% - 50px)' }}>
-          {/* sidebar */}
-          <div style={{ width: '32%', background: name === 'Sunset' ? `${accent}20` : name === 'Tech' ? '#161b22' : '#f8fafc', borderRight: `1px solid ${isDark ? '#30363d' : '#e2e8f0'}`, padding: '6px 5px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <Lines widths={[85, 70, 60]} height={2} color={isDark ? '#8b949e' : mutedColor} gap={3} />
-            <div style={{ height: '0.5px', background: isDark ? '#30363d' : '#e2e8f0', margin: '2px 0' }} />
-            <Pills count={4} color={`${accent}40`} />
-            <div style={{ height: '0.5px', background: isDark ? '#30363d' : '#e2e8f0', margin: '2px 0' }} />
-            <Lines widths={[90, 75, 80]} height={2} color={isDark ? '#8b949e' : '#94a3b8'} gap={3} />
-          </div>
-          {/* main */}
-          <div style={{ flex: 1, padding: '6px 7px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {/* section label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-              <div style={{ width: 2, height: 8, background: accent, borderRadius: 1 }} />
-              <div style={{ height: 2, width: 28, borderRadius: 1, background: accent, opacity: 0.7 }} />
-            </div>
-            <Lines widths={[95, 82, 88, 70]} height={2} color={isDark ? '#8b949e' : lineColor} gap={3} mb={4} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-              <div style={{ width: 2, height: 8, background: accent, borderRadius: 1 }} />
-              <div style={{ height: 2, width: 24, borderRadius: 1, background: accent, opacity: 0.7 }} />
-            </div>
-            <Lines widths={[90, 76, 84, 68, 78]} height={2} color={isDark ? '#8b949e' : lineColor} gap={3} />
-          </div>
-        </div>
-      ) : isTwoCol ? (
-        <div style={{ display: 'flex', height: 'calc(100% - 50px)', border: name === 'Chicago' ? '0 2px 2px 2px solid #111' : 'none' }}>
-          <div style={{ flex: 1, padding: '6px 8px', borderRight: `1px solid ${name === 'Chicago' ? '#111' : '#e2e8f0'}` }}>
-            <Lines widths={[95, 80, 88, 72, 85, 70]} height={2} color={lineColor} gap={3} />
-          </div>
-          <div style={{ flex: 1, padding: '6px 8px' }}>
-            <Lines widths={[88, 74, 80, 65, 78, 60]} height={2} color={lineColor} gap={3} />
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {/* section header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1 }}>
-            {name !== 'Elegant' && name !== 'Nordic' && <div style={{ width: 2, height: 7, background: accent, borderRadius: 1 }} />}
-            <div style={{ height: 2, width: 22, borderRadius: 1, background: accent, opacity: name === 'Nordic' ? 0.8 : 0.7 }} />
-            {(name === 'Elegant' || name === 'Nordic') && <div style={{ flex: 1, height: '0.5px', background: '#e2e8f0' }} />}
-          </div>
-          <Lines widths={[95, 80, 88, 72]} height={2} color={isDark ? '#30363d' : lineColor} gap={3} mb={3} />
-          {/* experience entry */}
-          <div style={{ paddingLeft: 6, borderLeft: `2px solid ${accent}30` }}>
-            <div style={{ height: 3, width: '45%', borderRadius: 2, background: isDark ? '#e6edf3' : '#334155', marginBottom: 2, opacity: 0.8 }} />
-            <div style={{ height: 2, width: '30%', borderRadius: 1, background: accent, marginBottom: 3, opacity: 0.7 }} />
-            <Lines widths={[90, 76, 82, 68]} height={2} color={isDark ? '#30363d' : lineColor} gap={3} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 /* ══════════════════════════════════════════════════
-   THEME BROWSER MODAL — rich placeholder previews
+   TEMPLATE CATEGORY TAGS — maps each theme to a category
+══════════════════════════════════════════════════ */
+const THEME_CATEGORIES = {
+  Modern:      ['All', 'Sidebar'],
+  Classic:     ['All', 'Classic'],
+  Minimal:     ['All', 'Minimal'],
+  Bold:        ['All', 'Dark'],
+  Executive:   ['All', 'Classic', 'ATS'],
+  Tech:        ['All', 'Dark', 'ATS'],
+  Creative:    ['All', 'Sidebar'],
+  Academic:    ['All', 'Two Column'],
+  Corporate:   ['All', 'ATS', 'Classic'],
+  Timeline:    ['All', 'Sidebar'],
+  Infographic: ['All', 'Sidebar'],
+  Nordic:      ['All', 'Minimal'],
+  Elegant:     ['All', 'Classic'],
+  Chicago:     ['All', 'Two Column'],
+  Sunset:      ['All', 'Sidebar'],
+};
+const CATEGORY_FILTERS = ['All', 'Classic', 'Sidebar', 'Two Column', 'ATS', 'Dark', 'Minimal'];
+
+/* ══════════════════════════════════════════════════
+   THEME BROWSER MODAL — resume.io style grid
+   Shows real user data thumbnails + category chips
 ══════════════════════════════════════════════════ */
 const ThemeBrowserModal = ({ isOpen, onClose, currentTheme, onSelect, accentColor, renderPreview }) => {
-  const [selected,  setSelected]  = useState(currentTheme);
+  const [selected,   setSelected]   = useState(currentTheme);
   const [previewing, setPreviewing] = useState(currentTheme);
-  const [useReal,   setUseReal]   = useState(false); // toggle: placeholder vs real preview
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  useEffect(() => { if (isOpen) { setSelected(currentTheme); setPreviewing(currentTheme); } }, [isOpen, currentTheme]);
+  useEffect(() => { if (isOpen) { setSelected(currentTheme); setPreviewing(currentTheme); setActiveCategory('All'); } }, [isOpen, currentTheme]);
 
   if (!isOpen) return null;
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)' }}>
+  const filteredThemes = THEME_LIST.filter(name =>
+    (THEME_CATEGORIES[name] || ['All']).includes(activeCategory)
+  );
 
-      {/* ── Left: theme grid ── */}
-      <div style={{ width: 340, background: '#080c14', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 18px 12px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', background: 'rgba(2,6,14,0.96)', backdropFilter: 'blur(12px)' }}>
+
+      {/* ── Left: template browser ── */}
+      <div style={{ width: 380, background: '#080c14', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>Choose Template</div>
-            <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{THEME_LIST.length} themes · hover to preview</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Template & Style</div>
+            <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>{THEME_LIST.length} templates · click to select</div>
           </div>
-          <button onClick={onClose} style={{ background: '#1e293b', border: 'none', borderRadius: 7, width: 30, height: 30, cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X /></button>
+          <button onClick={onClose} style={{ background: '#1e293b', border: 'none', borderRadius: 7, width: 30, height: 30, cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X /></button>
         </div>
 
-        {/* grid of theme cards — each shows a rich placeholder */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
-          {THEME_LIST.map(name => {
-            const cfg = THEME_CONFIGS[name] || {};
+        {/* Category filter chips */}
+        <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #1e293b', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {CATEGORY_FILTERS.map(cat => (
+            <button key={cat} onClick={() => setActiveCategory(cat)}
+              style={{
+                padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                border: `1.5px solid ${activeCategory === cat ? '#0d9488' : '#1e293b'}`,
+                background: activeCategory === cat ? '#042f2e' : 'transparent',
+                color: activeCategory === cat ? '#0d9488' : '#64748b',
+                transition: 'all 0.15s',
+              }}
+            >{cat}</button>
+          ))}
+        </div>
+
+        {/* Template grid — 2 columns with real previews */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, alignContent: 'start' }}>
+          {filteredThemes.map(name => {
+            const cfg      = THEME_CONFIGS[name] || {};
             const isActive = name === currentTheme;
+            const isSelected = name === selected;
             const isHov    = name === previewing;
+
             return (
               <div key={name}
                 onMouseEnter={() => setPreviewing(name)}
                 onMouseLeave={() => setPreviewing(selected)}
                 onClick={() => { setSelected(name); setPreviewing(name); }}
-                style={{ borderRadius: 9, overflow: 'hidden', cursor: 'pointer', border: isActive ? `2px solid #0d9488` : isHov ? `2px solid #334155` : '2px solid #1e293b', transition: 'border-color 0.14s, transform 0.11s', transform: isHov ? 'scale(1.025)' : 'scale(1)', background: '#0f172a' }}
+                style={{
+                  borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                  border: (isActive || isSelected) ? `2px solid #0d9488` : isHov ? `2px solid #334155` : '2px solid #1e293b',
+                  transition: 'border-color 0.14s, transform 0.12s, box-shadow 0.12s',
+                  transform: isHov ? 'translateY(-2px)' : 'translateY(0)',
+                  boxShadow: isHov ? '0 8px 24px rgba(0,0,0,0.4)' : 'none',
+                  background: '#0a0f1e',
+                  position: 'relative',
+                }}
               >
-                {/* placeholder preview thumbnail */}
-                <div style={{ height: 80, position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ transform: 'scale(1)', width: '100%', height: '100%' }}>
-                    <PlaceholderPreview name={name} accent={accentColor} />
+                {/* Thumbnail — real document content scaled down */}
+                <div style={{ height: 120, overflow: 'hidden', background: '#fff', position: 'relative' }}>
+                  <div style={{
+                    transform: 'scale(0.36)',
+                    transformOrigin: 'top left',
+                    width: '278%',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}>
+                    {renderPreview(name)}
                   </div>
-                  {(isActive || name === selected) && (
-                    <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                  {/* Selected checkmark badge */}
+                  {(isActive || isSelected) && (
+                    <div style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}>
                       <Check />
                     </div>
                   )}
+
+                  {/* Category tag overlay */}
+                  <div style={{ position: 'absolute', bottom: 5, left: 5, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    {(THEME_CATEGORIES[name] || []).filter(c => c !== 'All').slice(0, 1).map(tag => (
+                      <span key={tag} style={{ fontSize: 7, fontWeight: 700, background: 'rgba(0,0,0,0.72)', color: '#94a3b8', padding: '2px 5px', borderRadius: 3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{tag}</span>
+                    ))}
+                  </div>
                 </div>
-                {/* label */}
-                <div style={{ padding: '5px 7px', background: isHov ? '#1e293b' : '#0a0e1a', transition: 'background 0.14s' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: (isActive || name === selected) ? '#0d9488' : '#cbd5e1' }}>{name}</div>
-                  <div style={{ fontSize: 8, color: '#475569', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cfg.desc}</div>
+
+                {/* Template name + description */}
+                <div style={{ padding: '7px 9px 8px', background: isHov ? '#111827' : '#0a0f1e', transition: 'background 0.14s' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: (isActive || isSelected) ? '#0d9488' : '#e2e8f0', marginBottom: 2 }}>{name}</div>
+                  <div style={{ fontSize: 9, color: '#475569', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cfg.desc}</div>
                 </div>
               </div>
             );
           })}
+
+          {filteredThemes.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#334155', fontSize: 12 }}>
+              No templates in this category
+            </div>
+          )}
         </div>
 
-        {/* apply + toggle */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: 7 }}>
-          {/* real data toggle */}
-          <button onClick={() => setUseReal(p => !p)} style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 7, padding: '7px 0', cursor: 'pointer', fontSize: 11, color: '#64748b' }}>
-            {useReal ? '📋 Show placeholder preview' : '🔍 Preview with my data'}
-          </button>
+        {/* Apply button */}
+        <div style={{ padding: '12px 14px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: 7 }}>
           <button onClick={() => { onSelect(selected); onClose(); }}
-            style={{ width: '100%', background: 'linear-gradient(135deg,#0d9488,#0f766e)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-            Apply {selected} Theme
+            style={{ width: '100%', background: 'var(--accent-color)', color: '#fff', border: 'none', borderRadius: 9, padding: '11px 0', cursor: 'pointer', fontSize: 13, fontWeight: 700, letterSpacing: '0.02em', transition: 'opacity 0.15s' }}>
+            Apply {selected} Template
           </button>
         </div>
       </div>
 
-      {/* ── Right: detail preview ── */}
+      {/* ── Right: large preview ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Preview header bar */}
         <div style={{ padding: '12px 24px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#0d9488' }} />
           <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>
-            preview — <span style={{ color: '#94a3b8' }}>{previewing}</span>
+            preview — <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{previewing}</span>
           </span>
-          <div style={{ marginLeft: 'auto', fontSize: 10, color: '#334155' }}>
-            {useReal ? 'Showing your document data' : 'Showing placeholder content'}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontSize: 9, background: '#042f2e', color: '#0d9488', fontWeight: 700, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {(THEME_CATEGORIES[previewing] || []).filter(c => c !== 'All').join(' · ') || 'Template'}
+            </div>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '28px', background: '#050810', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-          {useReal ? (
-            /* actual rendered document with user data */
-            <div style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 6, boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-              {renderPreview(previewing)}
-            </div>
-          ) : (
-            /* large placeholder preview, scaled up nicely */
-            <div style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 6, boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,0.7)', overflow: 'hidden', minHeight: 400 }}>
-              <LargePlaceholder name={previewing} accent={accentColor} />
-            </div>
-          )}
+        {/* Full-size preview */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '28px', background: 'var(--bg-color)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 680, background: '#fff', borderRadius: 8, boxShadow: '0 0 0 1px rgba(255,255,255,0.05), 0 24px 80px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
+            {renderPreview(previewing)}
+          </div>
         </div>
       </div>
     </div>
@@ -245,125 +194,8 @@ const ThemeBrowserModal = ({ isOpen, onClose, currentTheme, onSelect, accentColo
 };
 
 /* ──────────────────────────────────────────────────
-   LARGE PLACEHOLDER — realistic full-size mockup
-   uses the same placeholder content for all themes
-   but renders in the actual theme's visual style
+   (Large placeholders removed)
 ────────────────────────────────────────────────── */
-const PLACEHOLDER_DATA = {
-  name: 'Alex Johnson', title: 'Senior Product Designer', location: 'Nairobi, Kenya',
-  email1: 'alex@example.com', phone: '+254 700 000 000', linkedin: 'linkedin.com/in/alex',
-  summary: 'Experienced designer with 8+ years crafting digital products used by millions. Expert in user research, prototyping, and cross-functional collaboration to deliver impactful experiences.',
-  skills: ['Figma','User Research','Design Systems','Prototyping','Usability Testing'],
-  education: ['BA Design — Nairobi University — 2016'],
-  experience: [{ company: 'Innovate Labs', role: 'Senior Product Designer', period: '2020 – Present', bullets: ['Led redesign of core product increasing retention by 32%.','Built and maintained a design system used by 12 engineers.','Conducted 40+ user interviews to inform product strategy.'] }],
-  projects: ['AdaptDoc — AI-powered document creation platform'],
-  certifications: ['Google UX Design Certificate'],
-  references: 'Available upon request',
-};
-
-const LargePlaceholder = ({ name: themeName, accent }) => {
-  /* Dynamically import and render the actual CVPreview component with placeholder data.
-     Since we can't do dynamic imports here synchronously, we render a scaled placeholder. */
-  const isSplit = ['Modern','Creative','Timeline','Infographic','Sunset'].includes(themeName);
-  const isDark  = themeName === 'Tech';
-  const bg      = isDark ? '#0d1117' : ['Classic'].includes(themeName) ? '#fffef9' : '#fff';
-  const accent_ = accent;
-
-  /* header background */
-  const hasColorHeader = ['Bold','Corporate','Executive','Tech','Creative','Infographic','Sunset'].includes(themeName);
-  const headerBg = themeName === 'Sunset' ? `linear-gradient(135deg,${accent_},#f97316)` : ['Bold','Corporate','Executive','Tech'].includes(themeName) ? '#0f172a' : themeName === 'Creative' || themeName === 'Infographic' ? accent_ : undefined;
-
-  const lc = isDark ? '#30363d' : '#e2e8f0';
-  const tc = isDark ? '#e6edf3' : '#111';
-  const mc = isDark ? '#8b949e' : '#64748b';
-  const fz = 11;
-
-  const Block = ({ label, children }) => (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-        <div style={{ width: 2, height: 12, background: accent_, borderRadius: 1 }} />
-        <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: accent_, opacity: 0.8 }}>{label}</div>
-      </div>
-      {children}
-    </div>
-  );
-
-
-
-  return (
-    <div style={{ fontFamily: 'sans-serif', fontSize: fz, background: bg, minHeight: 420, color: tc }}>
-      {/* Header */}
-      {hasColorHeader ? (
-        <div style={{ background: headerBg, padding: isSplit ? '18px 16px 14px' : '16px 20px', position: 'relative' }}>
-          {['Bold','Corporate','Executive','Tech'].includes(themeName) && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: accent_ }} />}
-          <div style={{ display: 'flex', gap: isSplit ? 0 : 12, alignItems: 'center', justifyContent: themeName === 'Infographic' ? 'flex-start' : 'flex-start' }}>
-            {themeName === 'Infographic' && <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', marginRight: 10 }}>A</div>}
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{PLACEHOLDER_DATA.name}</div>
-              <div style={{ fontSize: 9, color: accent_, fontWeight: 600, letterSpacing: '1px', marginBottom: 6 }}>{PLACEHOLDER_DATA.title}</div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[PLACEHOLDER_DATA.location, PLACEHOLDER_DATA.email1, PLACEHOLDER_DATA.phone].map((v, i) => (
-                  <span key={i} style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)' }}>{v}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '14px 20px', borderBottom: `1.5px solid ${['Classic','Elegant'].includes(themeName) ? accent_ : accent_ + '40'}`, textAlign: ['Classic','Elegant'].includes(themeName) ? 'center' : 'left' }}>
-          <div style={{ fontSize: 17, fontWeight: themeName === 'Nordic' ? 200 : 700, color: tc, marginBottom: 3, letterSpacing: themeName === 'Nordic' ? '-1px' : 0 }}>{PLACEHOLDER_DATA.name}</div>
-          <div style={{ fontSize: 9, color: accent_, marginBottom: 6, letterSpacing: themeName === 'Classic' ? '1px' : 0, fontStyle: themeName === 'Classic' ? 'italic' : 'normal' }}>{PLACEHOLDER_DATA.title}</div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: ['Classic','Elegant'].includes(themeName) ? 'center' : 'flex-start' }}>
-            {[PLACEHOLDER_DATA.location, PLACEHOLDER_DATA.email1].map((v, i) => <span key={i} style={{ fontSize: 8, color: mc }}>{v}</span>)}
-          </div>
-        </div>
-      )}
-
-      {/* Body */}
-      {isSplit ? (
-        <div style={{ display: 'flex', height: 340 }}>
-          <div style={{ width: '32%', background: themeName === 'Sunset' ? `${accent_}15` : '#f8fafc', borderRight: `1px solid ${lc}`, padding: '10px 8px' }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 5 }}>Skills</div>
-            {PLACEHOLDER_DATA.skills.map((s, i) => <div key={i} style={{ fontSize: 8, color: mc, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 4, height: 4, borderRadius: '50%', background: accent_, flexShrink: 0 }} />{s}</div>)}
-            <div style={{ height: '0.5px', background: lc, margin: '8px 0' }} />
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 5 }}>Education</div>
-            {PLACEHOLDER_DATA.education.map((e, i) => <div key={i} style={{ fontSize: 8, color: mc, lineHeight: 1.4 }}>{e}</div>)}
-          </div>
-          <div style={{ flex: 1, padding: '10px 12px' }}>
-            <Block label="Summary"><div style={{ fontSize: 8, color: mc, lineHeight: 1.6 }}>{PLACEHOLDER_DATA.summary}</div></Block>
-            <Block label="Experience">
-              {PLACEHOLDER_DATA.experience.map((exp, i) => (
-                <div key={i} style={{ paddingLeft: 8, borderLeft: `2px solid ${accent_}30`, marginBottom: 8 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: tc }}>{exp.company}</div>
-                  <div style={{ fontSize: 8, color: accent_, fontWeight: 600, marginBottom: 3 }}>{exp.role} · {exp.period}</div>
-                  {exp.bullets.map((b, j) => <div key={j} style={{ fontSize: 7, color: mc, lineHeight: 1.5, marginBottom: 2 }}>▸ {b}</div>)}
-                </div>
-              ))}
-            </Block>
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '10px 20px' }}>
-          <Block label="Summary"><div style={{ fontSize: 8, color: mc, lineHeight: 1.6 }}>{PLACEHOLDER_DATA.summary}</div></Block>
-          <Block label="Skills">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {PLACEHOLDER_DATA.skills.map((s, i) => <div key={i} style={{ background: `${accent_}18`, border: `1px solid ${accent_}30`, borderRadius: 4, padding: '1px 7px', fontSize: 7, color: accent_ }}>{s}</div>)}
-            </div>
-          </Block>
-          <Block label="Experience">
-            {PLACEHOLDER_DATA.experience.map((exp, i) => (
-              <div key={i} style={{ paddingLeft: 8, borderLeft: `2px solid ${accent_}30`, marginBottom: 8 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: tc }}>{exp.company}</div>
-                <div style={{ fontSize: 8, color: accent_, marginBottom: 3 }}>{exp.role} · {exp.period}</div>
-                {exp.bullets.map((b, j) => <div key={j} style={{ fontSize: 7, color: mc, lineHeight: 1.5, marginBottom: 2 }}>▸ {b}</div>)}
-              </div>
-            ))}
-          </Block>
-        </div>
-      )}
-    </div>
-  );
-};
 
 /* ══════════════════════════════════════════════════
    MAIN COMPONENT
@@ -390,29 +222,12 @@ const TemplateSelector = ({
 
   const isExporting = pdfLoading || wordLoading;
 
-  /* ── PDF download — routes to backend API ── */
+  /* ── PDF download — routes to client-side react-to-print ── */
   const handleExport = async () => {
     if (exportFormat === 'word' || exportFormat === 'both') {
       onDownloadWord?.();
     }
     if (exportFormat === 'pdf' || exportFormat === 'both') {
-      // Try backend first; fall back to client-side
-      try {
-        const res = await fetch('/api/documents/export-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')||''}` },
-          body: JSON.stringify({ theme, fontSize, accentColor, fontFamily, spacing, paperSize, showPageNumbers }),
-        });
-        if (res.ok) {
-          const blob = await res.blob();
-          const url  = URL.createObjectURL(blob);
-          const a    = document.createElement('a');
-          a.href = url; a.download = 'document.pdf'; a.click();
-          URL.revokeObjectURL(url);
-          return;
-        }
-      } catch { /* fall through to client-side */ }
-      // Client-side fallback
       onDownloadPDF?.();
     }
   };
@@ -495,10 +310,30 @@ const TemplateSelector = ({
           </button>
           {openSec.typo && (
             <div style={{ padding: '10px 16px 14px' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Font Family</div>
+              {[
+                { label: 'Sans-Serif', fonts: ['Inter','Roboto','Open Sans','Lato','Poppins','DM Sans','Outfit','Plus Jakarta Sans','Sora','Space Grotesk','IBM Plex Sans','Josefin Sans','Raleway','Nunito'] },
+                { label: 'Serif',      fonts: ['Playfair Display','Merriweather','Lora','Cormorant Garamond','Libre Baskerville','Crimson Pro','DM Serif Display','Source Serif 4'] },
+                { label: 'Mono',       fonts: ['Fira Code'] },
+                { label: 'Display',    fonts: ['Quicksand'] },
+              ].map(group => (
+                <div key={group.label} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 8, color: '#334155', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 5 }}>{group.label}</div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    {group.fonts.map(f => (
+                      <button key={f} onClick={() => onFontFamilyChange?.(f)}
+                        style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: fontFamily===f?'var(--accent-color)':'var(--border-color)', background: fontFamily===f?'var(--accent-subtle)':'var(--bg-color)', color: fontFamily===f?'var(--accent-color)':'var(--text-secondary)', fontFamily: `'${f}', sans-serif` }}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
               <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Font Size</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
                 {FONT_SIZES.map(f => (
-                  <button key={f} onClick={() => onFontSizeChange(f)} style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: fontSize===f?'#0d9488':'#1e293b', background: fontSize===f?'#042f2e':'#0f172a', color: fontSize===f?'#0d9488':'#64748b' }}>
+                  <button key={f} onClick={() => onFontSizeChange(f)} style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: fontSize===f?'var(--accent-color)':'var(--border-color)', background: fontSize===f?'var(--accent-subtle)':'var(--bg-color)', color: fontSize===f?'var(--accent-color)':'var(--text-secondary)' }}>
                     {f}
                   </button>
                 ))}
@@ -506,7 +341,7 @@ const TemplateSelector = ({
               <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Line Spacing</div>
               <div style={{ display: 'flex', gap: 5 }}>
                 {SPACING_PRESETS.map(sp => (
-                  <button key={sp.id} onClick={() => onSpacingChange?.(sp.id)} style={{ flex: 1, padding: '6px 4px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: spacing===sp.id?'#0d9488':'#1e293b', background: spacing===sp.id?'#042f2e':'#0f172a', color: spacing===sp.id?'#0d9488':'#64748b' }}>
+                  <button key={sp.id} onClick={() => onSpacingChange?.(sp.id)} style={{ flex: 1, padding: '6px 4px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: spacing===sp.id?'var(--accent-color)':'var(--border-color)', background: spacing===sp.id?'var(--accent-subtle)':'var(--bg-color)', color: spacing===sp.id?'var(--accent-color)':'var(--text-secondary)' }}>
                     {sp.label}
                   </button>
                 ))}
@@ -526,7 +361,7 @@ const TemplateSelector = ({
               <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Paper Size</div>
               <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                 {PAPER_SIZES.map(p => (
-                  <button key={p} onClick={() => onPaperSizeChange?.(p)} style={{ flex: 1, padding: '6px 4px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: paperSize===p?'#0d9488':'#1e293b', background: paperSize===p?'#042f2e':'#0f172a', color: paperSize===p?'#0d9488':'#64748b' }}>
+                  <button key={p} onClick={() => onPaperSizeChange?.(p)} style={{ flex: 1, padding: '6px 4px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: paperSize===p?'var(--accent-color)':'var(--border-color)', background: paperSize===p?'var(--accent-subtle)':'var(--bg-color)', color: paperSize===p?'var(--accent-color)':'var(--text-secondary)' }}>
                     {p}
                   </button>
                 ))}
@@ -581,8 +416,17 @@ const TemplateSelector = ({
                 </div>
               )}
 
-              <button onClick={handleExport} disabled={isExporting} style={{ width:'100%', background: isExporting ? '#1e293b' : 'linear-gradient(135deg,#0d9488,#0f766e)', color: isExporting?'#475569':'#fff', border:'none', borderRadius:8, padding:'10px 0', cursor: isExporting?'not-allowed':'pointer', fontSize:12, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:7, transition:'all 0.18s' }}>
-                {isExporting ? 'Exporting…' : <><Download />{exportFormat==='pdf'?'Download PDF':exportFormat==='word'?'Download Word':'Download Both'}</>}
+              <button onClick={handleExport} disabled={isExporting} style={{ width:'100%', background: isExporting ? '#1e293b' : 'var(--accent-color)', color: isExporting?'#475569':'#fff', border:'none', borderRadius:8, padding:'10px 0', cursor: isExporting?'not-allowed':'pointer', fontSize:12, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:7, transition:'all 0.18s' }}>
+                {isExporting ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    Exporting…
+                  </>
+                ) : (
+                  <><Download />{exportFormat==='pdf'?'Download PDF':exportFormat==='word'?'Download Word':'Download Both'}</>
+                )}
               </button>
 
               {exportFormat === 'both' && (
@@ -592,7 +436,7 @@ const TemplateSelector = ({
                 </div>
               )}
 
-              <button onClick={handleCopyLink} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:`1px solid ${copyDone?'#166534':'#1e293b'}`, background: copyDone?'#052e16':'#0f172a', color: copyDone?'#4ade80':'#64748b', fontSize:11, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 0.18s' }}>
+              <button onClick={handleCopyLink} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:`1px solid ${copyDone?'#0f766e':'#1e293b'}`, background: copyDone?'#042f2e':'#0f172a', color: copyDone?'#34d399':'#64748b', fontSize:11, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 0.18s' }}>
                 {copyDone ? '✓ Link copied!' : 'Copy Link'}
               </button>
             </div>
@@ -618,11 +462,11 @@ const Toggle = ({ label, desc, value, onChange }) => (
 );
 
 const ts = {
-  wrap:    { height:'100%', overflowY:'auto', background:'#0a0e1a', display:'flex', flexDirection:'column', fontFamily:"'Inter','Segoe UI',sans-serif" },
-  sec:     { borderBottom:'1px solid #0f172a' },
+  wrap:    { height:'100%', overflowY:'auto', background:'var(--surface)', display:'flex', flexDirection:'column', fontFamily:"'Inter','Segoe UI',sans-serif" },
+  sec:     { borderBottom:'1px solid var(--border-color)' },
   secHdr:  { width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 16px', background:'none', border:'none', cursor:'pointer', textAlign:'left' },
-  secTtl:  { fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.06em' },
-  themeBtn:{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 16px', background:'#0f172a', border:'none', borderBottom:'1px solid #1e293b', cursor:'pointer', textAlign:'left' },
+  secTtl:  { fontSize:10, fontWeight:700, color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.06em' },
+  themeBtn:{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 16px', background:'var(--card-bg)', border:'none', borderBottom:'1px solid var(--border-color)', cursor:'pointer', textAlign:'left' },
 };
 
 export default TemplateSelector;

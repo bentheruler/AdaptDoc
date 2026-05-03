@@ -1,23 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const hostname = window.location.hostname;
+const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 const API_URL = `${API_BASE}/api`;
 
 const SettingsTab = () => {
   const { user, token, updateUser, logoutUser } = useAuth();
   const navigate = useNavigate();
+  const avatarInputRef = useRef(null);
 
   // Profile State
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [profileMsg, setProfileMsg] = useState({ type: '', text: '' });
 
+  // Avatar State
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarMsg, setAvatarMsg] = useState({ type: '', text: '' });
+
   // Appearance State
   const [theme, setTheme] = useState(user?.settings?.appearance?.theme || 'dark');
-  const [accentColor, setAccentColor] = useState(user?.settings?.appearance?.accentColor || '#57d572');
+  const [accentColor, setAccentColor] = useState(user?.settings?.appearance?.accentColor || '#14b8a6');
   const [appearanceMsg, setAppearanceMsg] = useState({ type: '', text: '' });
 
   // Security State
@@ -30,6 +38,15 @@ const SettingsTab = () => {
   const [deletePassword, setDeletePassword] = useState('');
 
   const getHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
+
+  /** Read a File object and return a base64 data URL */
+  const readFileAsBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -120,6 +137,56 @@ const SettingsTab = () => {
     }
   };
 
+  /** Handle avatar file selection and upload */
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    if (!file.type.startsWith('image/')) {
+      setAvatarMsg({ type: 'error', text: 'Please select an image file.' });
+      return;
+    }
+    // Validate size — max 1 MB
+    if (file.size > 1_000_000) {
+      setAvatarMsg({ type: 'error', text: 'Image must be smaller than 1 MB.' });
+      return;
+    }
+
+    try {
+      setAvatarLoading(true);
+      setAvatarMsg({ type: '', text: '' });
+
+      const base64 = await readFileAsBase64(file);
+      setAvatarPreview(base64); // show preview immediately
+
+      const res = await axios.put(`${API_URL}/user/avatar`, { avatar: base64 }, getHeaders());
+      updateUser({ ...user, avatar: res.data.user.avatar });
+      setAvatarMsg({ type: 'success', text: 'Profile picture updated!' });
+    } catch (err) {
+      setAvatarMsg({ type: 'error', text: err.response?.data?.message || 'Failed to upload picture.' });
+      setAvatarPreview(user?.avatar || null); // revert on error
+    } finally {
+      setAvatarLoading(false);
+      e.target.value = ''; // reset input so same file can be re-selected
+    }
+  };
+
+  /** Remove the current avatar */
+  const handleRemoveAvatar = async () => {
+    try {
+      setAvatarLoading(true);
+      await axios.put(`${API_URL}/user/avatar`, { avatar: null }, getHeaders());
+      updateUser({ ...user, avatar: null });
+      setAvatarPreview(null);
+      setAvatarMsg({ type: 'success', text: 'Profile picture removed.' });
+    } catch (err) {
+      setAvatarMsg({ type: 'error', text: 'Failed to remove picture.' });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
   return (
     <div style={s.tabPage}>
       <div style={s.tabHeader}>
@@ -133,7 +200,61 @@ const SettingsTab = () => {
       </div>
 
       <div style={s.gridContainer}>
-        {/* Profile Section */}
+        {/* ── Profile Picture Section ── */}
+        <div style={s.settingsCard}>
+          <h3 style={s.sectionTitle}>Profile Picture</h3>
+          {avatarMsg.text && <div style={avatarMsg.type === 'error' ? s.errorAlert : s.successAlert}>{avatarMsg.text}</div>}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+            {/* Avatar preview circle */}
+            <div
+              style={{
+                width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
+                border: '2px solid var(--border-color)',
+                overflow: 'hidden', background: 'var(--surface)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, fontWeight: 700, color: 'var(--accent-color)',
+              }}
+            >
+              {avatarPreview
+                ? <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : (user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+              }
+            </div>
+
+            {/* Upload controls */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarChange}
+              />
+              <button
+                type="button"
+                style={s.btnPrimary}
+                disabled={avatarLoading}
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                {avatarLoading ? 'Uploading…' : '📷 Upload Photo'}
+              </button>
+              {avatarPreview && (
+                <button
+                  type="button"
+                  style={{ ...s.btnDanger, fontSize: 12, padding: '6px 14px' }}
+                  disabled={avatarLoading}
+                  onClick={handleRemoveAvatar}
+                >
+                  Remove Photo
+                </button>
+              )}
+              <p style={s.hint}>JPG, PNG or WebP · max 1 MB</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Profile Info Section ── */}
         <div style={s.settingsCard}>
           <h3 style={s.sectionTitle}>Profile Information</h3>
           {profileMsg.text && <div style={profileMsg.type === 'error' ? s.errorAlert : s.successAlert}>{profileMsg.text}</div>}
@@ -383,7 +504,7 @@ const s = {
   },
   successAlert: {
     background: 'rgba(16, 185, 129, 0.1)',
-    color: '#10b981',
+    color: 'var(--success-color)',
     padding: '10px 14px',
     borderRadius: 8,
     fontSize: 13,
