@@ -28,68 +28,9 @@ import SettingsTab from './SettingsTab';
 import { useDocuments } from '../../hooks/useDocuments';
 import { useUI } from '../../hooks/useUI';
 import { useAI } from '../../hooks/useAI';
+import { mapAICvToPreview } from '../../utils/cvMapper';
 
-const safe = (v) => {
-  if (!v) return '';
-  if (typeof v === 'string') return v;
-  if (typeof v === 'object') return v.label || v.value || v.name || v.school || v.degree || '';
-  return String(v);
-};
 
-const mapAICvToPreview = (content) => {
-  // The AI may return either:
-  // (a) nested: { basics: {...}, work: [...], skills: [...] }
-  // (b) flat:   { name, title, email1, experience: [...], skills: [...] }
-  // We handle both gracefully.
-  const basics = content?.basics || {};
-  const workArr = content?.work || content?.experience || [];
-
-  return {
-    name:  safe(basics.name  || content?.name),
-    phone: safe(basics.phone || content?.phone),
-    email1: safe(basics.email || content?.email1 || content?.email),
-    email2: safe(basics.email2 || content?.email2),
-    linkedin: safe(basics.linkedin || content?.linkedin),
-    title: safe(basics.title || basics.role || basics.headline || content?.title),
-    location: safe(basics.location || basics.address || basics.city || content?.location),
-    summary: safe(basics.summary || content?.summary),
-    skills: Array.isArray(content?.skills) ? content.skills.map(safe).filter(Boolean) : [],
-    education: Array.isArray(content?.education)
-      ? content.education
-        .map((edu) =>
-          typeof edu === 'string'
-            ? edu
-            : [
-              safe(edu.degree),
-              safe(edu.institution || edu.school || edu.university),
-              safe(edu.date || edu.year || edu.graduationDate),
-            ]
-              .filter(Boolean)
-              .join(' - ')
-        )
-        .filter(Boolean)
-      : [],
-    experience: Array.isArray(workArr)
-      ? workArr.map((job) => ({
-        company: safe(job.company),
-        period:  safe(job.period || job.duration || job.dates),
-        role:    safe(job.role || job.position || job.jobTitle),
-        bullets: Array.isArray(job.bullets)
-          ? job.bullets.map(safe).filter(Boolean)
-          : Array.isArray(job.achievements)
-            ? job.achievements.map(safe).filter(Boolean)
-            : job.description
-              ? [safe(job.description)]
-              : [],
-      }))
-      : [],
-    projects: Array.isArray(content?.projects) ? content.projects.map(safe).filter(Boolean) : [],
-    certifications: Array.isArray(content?.certifications)
-      ? content.certifications.map(safe).filter(Boolean)
-      : [],
-    references: safe(content?.references) || 'Available upon request',
-  };
-};
 
 const FIELD_CATALOGUE = {
   cv: [
@@ -371,6 +312,7 @@ const DashboardPage = () => {
 
   // Pre-fill data with the logged-in user's info so templates are never empty by default
   const [cvData, setCvData] = useState({
+    avatar: user?.profileData?.avatar || user?.avatar || '',
     name: user?.profileData?.name || user?.name || '',
     phone: user?.profileData?.phone || '',
     email1: user?.profileData?.email1 || user?.profileData?.email || user?.email || '',
@@ -515,7 +457,10 @@ const DashboardPage = () => {
   const handleDeleteDocument = async (id) => {
     const ok = await deleteDocument(id);
     if (ok) {
+      toast('Document deleted successfully', 'success');
       loadDocuments();
+    } else {
+      toast('Failed to delete document', 'error');
     }
   };
 
@@ -589,24 +534,48 @@ const DashboardPage = () => {
 
       if (!previewRef.current) throw new Error('Preview not found');
 
-      const html = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>Document Export</title></head>
-        <body>
-          ${previewRef.current.innerHTML}
-        </body>
-        </html>
-      `;
-
-      const blob = new Blob(['\ufeff', html], {
-        type: 'application/msword'
-      });
-      
       let filename = 'document';
       if (docType === 'cv') filename = cvData.name ? `${cvData.name}_CV` : 'CV';
       else if (docType === 'cover_letter') filename = coverLetterData.senderName ? `${coverLetterData.senderName}_Cover_Letter` : 'Cover_Letter';
       else if (docType === 'business_proposal') filename = proposalData.title ? `${proposalData.title}_Proposal` : 'Proposal';
 
+      const pageW = paperSize === 'A4' ? '210mm' : '8.5in';
+      const pageH = paperSize === 'A4' ? '297mm' : (paperSize === 'Legal' ? '14in' : '11in');
+
+      const html = `
+<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'>
+  <title>${filename.replace(/_/g, ' ')}</title>
+  <style>
+    @page {
+      size: ${pageW} ${pageH};
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: ${pageW};
+      height: ${pageH};
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    body > * {
+      page-break-inside: avoid;
+    }
+    /* Preserve inline styles from the React component */
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div style="width:${pageW};height:${pageH};overflow:hidden;display:flex;flex-direction:column;">
+    ${previewRef.current.innerHTML}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
       saveAs(blob, `${filename.replace(/\s+/g, '_')}.doc`);
       toast('Word document downloaded!', 'success');
     } catch (err) {
@@ -685,6 +654,7 @@ const DashboardPage = () => {
           activeTab={activeTab}
           onSaveDraft={handleSaveDraft}
           showSaveButton={activeTab === 'create'}
+          onOpenSettings={() => setActiveTab('settings')}
         />
 
         <div style={s.content}>
@@ -856,6 +826,11 @@ const DashboardPage = () => {
                     const badgeFg = typeColors[dt] || '#94a3b8';
                     const badgeBg = `${badgeFg}18`;
 
+                    const docTheme = doc.theme || 'modern';
+                    const docContent = doc.content || {};
+                    const docAccent = doc.accentColor || '#14b8a6';
+                    const docFontSize = doc.fontSize || 11;
+
                     return (
                       <div
                         key={doc._id || doc.id}
@@ -863,25 +838,28 @@ const DashboardPage = () => {
                         style={s.docCard}
                         onClick={() => handleOpenDocument(doc)}
                       >
+                        {/* Mini preview thumbnail */}
                         <div
                           style={{
-                            height: 70,
-                            background: `var(--surface)`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            height: 130,
+                            overflow: 'hidden',
+                            background: '#fff',
                             borderBottom: '1px solid var(--border-color)',
+                            position: 'relative',
+                            cursor: 'pointer',
                           }}
                         >
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ position: 'absolute', top: 0, left: 0, width: '340%', height: '340%', transformOrigin: 'top left', transform: 'scale(0.294)', pointerEvents: 'none' }}>
                             {dt === 'cv' ? (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                              <CVPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             ) : dt === 'cover_letter' ? (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                              <CoverLetterPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             ) : (
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badgeFg} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                              <ProposalPreview data={docContent} theme={docTheme} accentColor={docAccent} fontSize={docFontSize} editMode={false} spacing={1} />
                             )}
-                          </span>
+                          </div>
+                          {/* overlay to block interactions */}
+                          <div style={{ position: 'absolute', inset: 0 }} />
                         </div>
 
                         <div style={{ padding: '12px 14px', flex: 1 }}>

@@ -16,7 +16,7 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
   const getSteps = () => {
     if (docType === 'cv') {
       return [
-        { id: 'basics', label: 'Basic Info', fields: [{ key: 'name', label: 'Full Name' }, { key: 'title', label: 'Job Title' }, { key: 'email1', label: 'Email' }, { key: 'phone', label: 'Phone' }, { key: 'location', label: 'Location' }, { key: 'linkedin', label: 'LinkedIn URL' }] },
+        { id: 'basics', label: 'Basic Info', fields: [{ key: 'avatar', label: 'Profile Photo', type: 'image' }, { key: 'name', label: 'Full Name' }, { key: 'title', label: 'Job Title' }, { key: 'email1', label: 'Email' }, { key: 'phone', label: 'Phone' }, { key: 'location', label: 'Location' }, { key: 'linkedin', label: 'LinkedIn URL' }] },
         { id: 'summary', label: 'Summary', fields: [{ key: 'summary', label: 'Professional Summary', multiline: true, aiPrompt: 'Write a professional summary based on my job title.' }] },
         { id: 'experience', label: 'Experience', fields: [{ key: 'experience', label: 'Experience Details (Format: Role · Company · Period \n Bullet points)', multiline: true }] },
         { id: 'education', label: 'Education', fields: [{ key: 'education', label: 'Education (Comma separated or one per line)', multiline: true, aiPrompt: 'Suggest a standard format for a University education entry.' }] },
@@ -59,12 +59,16 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
       const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
       const API_BASE = isLocalhost ? `http://${hostname}:5000` : (process.env.REACT_APP_API_URL?.replace('http://', 'https://') || 'https://adaptdoc-production.up.railway.app');
 
+      const dynamicPrompt = data[field.key] && data[field.key].length > 0
+        ? `Rewrite, enhance, and improve the following ${field.label}:\n\n${JSON.stringify(data[field.key], null, 2)}\n\nMake it sound more professional and impactful.`
+        : field.aiPrompt;
+
       const res = await fetch(`${API_BASE}/api/ai/chat-edit`, { // use generic fetch or axios if hook not perfect
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
         body: JSON.stringify({
           documentData: data,
-          messages: [{ role: 'user', content: field.aiPrompt }]
+          messages: [{ role: 'user', content: dynamicPrompt }]
         })
       });
       const result = await res.json();
@@ -72,8 +76,25 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
         throw new Error(result.message || 'AI generation failed');
       }
       
-      if (result.updatedDocument && result.updatedDocument[field.key]) {
-        handleFieldChange(field.key, result.updatedDocument[field.key]);
+      if (result.updatedDocument && result.updatedDocument[field.key] !== undefined) {
+        let aiVal = result.updatedDocument[field.key];
+        
+        // Ensure that array fields are converted to arrays of strings
+        if (['skills', 'education', 'projects', 'certifications'].includes(field.key)) {
+          if (Array.isArray(aiVal)) {
+            aiVal = aiVal.map(item => {
+              if (typeof item === 'object' && item !== null) {
+                // flatten object values into a string
+                return Object.values(item).filter(Boolean).join(' - ');
+              }
+              return String(item);
+            });
+          } else if (typeof aiVal === 'string') {
+            aiVal = aiVal.split('\n').filter(Boolean);
+          }
+        }
+        
+        handleFieldChange(field.key, aiVal);
         toast('AI Generation successful!', 'success');
       } else {
         throw new Error('No content generated');
@@ -205,6 +226,33 @@ const DocumentWizard = ({ docType, data, onDataChange, onGenerateAI, aiLoading, 
                     fontFamily: 'inherit', fontSize: '14px', resize: 'vertical'
                   }}
                 />
+              ) : f.type === 'image' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  {data[f.key] && (
+                    <img src={data[f.key]} alt="Preview" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover' }} />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => handleFieldChange(f.key, reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{
+                      width: '100%', padding: '8px',
+                      borderRadius: '8px', border: '1px solid var(--border-color)',
+                      background: 'var(--bg-color)', color: 'var(--text-primary)',
+                      fontFamily: 'inherit', fontSize: '13px'
+                    }}
+                  />
+                  {data[f.key] && (
+                    <button onClick={() => handleFieldChange(f.key, '')} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Remove</button>
+                  )}
+                </div>
               ) : (
                 <input
                   type="text"

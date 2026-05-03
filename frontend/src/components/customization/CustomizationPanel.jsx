@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { mapAICvToPreview } from '../../utils/cvMapper';
 
 /* ══════════════════════════════════════════════════
    QUICK-ACTION CHIPS
@@ -196,6 +197,10 @@ const CustomizationPanel = ({
 
       if (data.updatedDocument && typeof data.updatedDocument === 'object') {
         updatedDoc = data.updatedDocument;
+        if (docType === 'cv') {
+          // Flatten objects into strings to prevent React Error #31
+          updatedDoc = mapAICvToPreview(updatedDoc);
+        }
         applyUpdate(updatedDoc);
       }
 

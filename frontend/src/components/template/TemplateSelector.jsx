@@ -311,13 +311,25 @@ const TemplateSelector = ({
           {openSec.typo && (
             <div style={{ padding: '10px 16px 14px' }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Font Family</div>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
-                {['Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Playfair Display', 'Merriweather', 'Lora', 'Nunito', 'Fira Code'].map(f => (
-                  <button key={f} onClick={() => onFontFamilyChange?.(f)} style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: fontFamily===f?'var(--accent-color)':'var(--border-color)', background: fontFamily===f?'var(--accent-subtle)':'var(--bg-color)', color: fontFamily===f?'var(--accent-color)':'var(--text-secondary)' }}>
-                    {f}
-                  </button>
-                ))}
-              </div>
+              {[
+                { label: 'Sans-Serif', fonts: ['Inter','Roboto','Open Sans','Lato','Poppins','DM Sans','Outfit','Plus Jakarta Sans','Sora','Space Grotesk','IBM Plex Sans','Josefin Sans','Raleway','Nunito'] },
+                { label: 'Serif',      fonts: ['Playfair Display','Merriweather','Lora','Cormorant Garamond','Libre Baskerville','Crimson Pro','DM Serif Display','Source Serif 4'] },
+                { label: 'Mono',       fonts: ['Fira Code'] },
+                { label: 'Display',    fonts: ['Quicksand'] },
+              ].map(group => (
+                <div key={group.label} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 8, color: '#334155', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 5 }}>{group.label}</div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    {group.fonts.map(f => (
+                      <button key={f} onClick={() => onFontFamilyChange?.(f)}
+                        style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s', borderColor: fontFamily===f?'var(--accent-color)':'var(--border-color)', background: fontFamily===f?'var(--accent-subtle)':'var(--bg-color)', color: fontFamily===f?'var(--accent-color)':'var(--text-secondary)', fontFamily: `'${f}', sans-serif` }}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
               <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 7 }}>Font Size</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
                 {FONT_SIZES.map(f => (

@@ -4,9 +4,9 @@ import { forwardRef } from 'react';
 const DocumentPreview = forwardRef(({ children, editMode, onToggleEditMode, paperSize = 'A4' }, ref) => {
   const getDims = () => {
     switch (paperSize) {
-      case 'Letter': return { width: '8.5in', minHeight: '11in' };
-      case 'Legal': return { width: '8.5in', minHeight: '14in' };
-      default: return { width: '210mm', minHeight: '297mm' }; // A4
+      case 'Letter': return { width: '8.5in', height: '11in' };
+      case 'Legal': return { width: '8.5in', height: '14in' };
+      default: return { width: '210mm', height: '297mm' }; // A4
     }
   };
   const dims = getDims();
@@ -41,11 +41,11 @@ const DocumentPreview = forwardRef(({ children, editMode, onToggleEditMode, pape
       ref={ref}
       style={{
         background: '#fff', position: 'relative',
-        width: dims.width, minHeight: dims.minHeight,
+        width: dims.width, height: dims.height,
         boxShadow: editMode ? '0 0 0 2px #f59e0b, 0 4px 24px #0000000d' : '0 4px 24px #0000000d',
         transition: 'all 0.3s ease',
         margin: '0 auto',
-        display: 'flex', flexDirection: 'column'
+        display: 'flex', flexDirection: 'column', overflow: 'hidden'
       }}
     >
       {editMode && (

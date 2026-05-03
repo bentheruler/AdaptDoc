@@ -124,8 +124,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Use cost factor 8 instead of 10 — still very secure but ~4x faster
+    const hashedPassword = await bcrypt.hash(password, 8);
 
     const verificationToken = createToken();
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -141,16 +141,16 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    try {
-      await sendVerificationEmail(user, verificationToken);
-    } catch (mailError) {
-      console.error('Verification email failed:', mailError.message);
-      return res.status(500).json({ message: 'User registered, but failed to send verification email. Please try again later.' });
-    }
-
+    // ✅ Respond immediately — don't await email sending
     res.status(201).json({
-      message: 'User registered successfully. Please verify your email.',
+      message: 'User registered successfully. Please check your email to verify your account.',
     });
+
+    // Send email in background (non-blocking)
+    sendVerificationEmail(user, verificationToken).catch((mailError) => {
+      console.error('Verification email failed (background):', mailError.message);
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -170,14 +170,9 @@ router.post('/resend-verification', async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user) {
-      return res.json({
-        message: 'If that email exists, a verification link has been sent.',
-      });
-    }
-
-    if (user.isVerified) {
-      return res.json({ message: 'This email is already verified.' });
+    if (!user || user.isVerified) {
+      // Respond immediately regardless — prevents user enumeration
+      return res.json({ message: 'If that email exists and is unverified, a verification link has been sent.' });
     }
 
     const verificationToken = createToken();
@@ -187,16 +182,13 @@ router.post('/resend-verification', async (req, res) => {
     user.emailVerificationExpires = verificationExpiry;
     await user.save();
 
-    try {
-      await sendVerificationEmail(user, verificationToken);
-    } catch (mailError) {
-      console.error('Resend verification email failed:', mailError.message);
-      return res.status(500).json({ message: 'Failed to send verification email. Please try again later.' });
-    }
+    // Respond immediately — send email in background
+    res.json({ message: 'If that email exists and is unverified, a verification link has been sent.' });
 
-    res.json({
-      message: 'If that email exists, a verification link has been sent.',
+    sendVerificationEmail(user, verificationToken).catch((mailError) => {
+      console.error('Resend verification email failed (background):', mailError.message);
     });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -455,17 +447,17 @@ router.post('/forgot-password', async (req, res) => {
       user.passwordResetExpires = resetExpiry;
       await user.save();
 
-      try {
-        await sendPasswordResetEmail(user, resetToken);
-      } catch (mailError) {
-        console.error('Password reset email failed:', mailError.message);
-        return res.status(500).json({ message: 'Failed to send password reset email. Please check your email configuration or try again later.' });
-      }
+      // Respond immediately — send email in background
+      res.json({ message: 'If that email exists, a password reset link has been sent.' });
+
+      sendPasswordResetEmail(user, resetToken).catch((mailError) => {
+        console.error('Password reset email failed (background):', mailError.message);
+      });
+    } else {
+      // Respond immediately even if user not found (security best practice)
+      res.json({ message: 'If that email exists, a password reset link has been sent.' });
     }
 
-    res.json({
-      message: 'If that email exists, a password reset link has been sent.',
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register, resendVerification, googleLogin } from '../utils/api';
+import { register, resendVerification, googleLogin, warmServer } from '../utils/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
@@ -15,6 +15,9 @@ const Register = () => {
 
   const navigate = useNavigate();
   const { loginUser } = useAuth();
+
+  // Pre-warm the Railway server as soon as the register page loads
+  useEffect(() => { warmServer(); }, []);
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -190,7 +193,9 @@ const Register = () => {
 
       let message = err.response?.data?.message;
       if (!message) {
-        if (err.message === 'Network Error' || err.code === 'ECONNABORTED') {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          message = 'The server is waking up from sleep — please wait a moment and try again.';
+        } else if (err.message === 'Network Error') {
           message = 'Network error: Please check your connection and try again.';
         } else {
           message = err.message || 'Registration failed. Please try again.';

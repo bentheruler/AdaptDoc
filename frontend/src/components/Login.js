@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { login, googleLogin, resendVerification } from '../utils/api';
+import { login, googleLogin, resendVerification, warmServer } from '../utils/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import './Auth.css';
 
@@ -22,6 +22,9 @@ const Login = () => {
 
   const navigate = useNavigate();
   const { loginUser } = useAuth();
+
+  // Pre-warm the Railway server as soon as the login page loads
+  useEffect(() => { warmServer(); }, []);
 
   const validateEmail = (email) => {
     const trimmed = email.trim();
@@ -112,7 +115,9 @@ const Login = () => {
 
       let message = err.response?.data?.message;
       if (!message) {
-        if (err.message === 'Network Error' || err.code === 'ECONNABORTED') {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          message = 'The server is waking up from sleep — please try again in a moment.';
+        } else if (err.message === 'Network Error') {
           message = 'Network error: Please check your connection and try again.';
         } else {
           message = err.message || 'Login failed. Please try again.';

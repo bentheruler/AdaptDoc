@@ -15,6 +15,7 @@ const loadFont = (url) => {
    NORMALISE — safe defaults for every field
 ══════════════════════════════════════════════════ */
 const normalise = (data = {}) => ({
+  avatar:  data.avatar  || '',
   name:    data.name    || '', title:   data.title   || '',
   location:data.location|| '', email1:  data.email1  || '',
   email2:  data.email2  || '', phone:   data.phone   || '',
@@ -151,6 +152,7 @@ function ModernCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remo
     <div style={{fontSize:fz,display:'flex',flex: 1, minHeight: '100%',background:'#fff'}}>
       <div style={{width:'34%',background:accent,color:'#fff',padding:'28px 18px',display:'flex',flexDirection:'column',gap:16}}>
         <div style={{borderBottom:'2px solid rgba(255,255,255,0.3)',paddingBottom:14}}>
+          {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', marginBottom: 12, border: '2px solid rgba(255,255,255,0.5)' }} />}
           <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.6,fontWeight:800,color:'#fff',lineHeight:1.2}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.5)'}} />
           <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.85,color:'rgba(255,255,255,0.85)',textTransform:'uppercase',letterSpacing:'0.5px',marginTop:5,display:'block'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
         </div>
@@ -219,6 +221,7 @@ function ClassicCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,rem
   return (
     <div style={{fontSize:fz,background:'#fffef9',padding:'36px 40px',flex: 1, minHeight: '100%',color:'#1a1a1a'}}>
       <div style={{textAlign:'center',borderBottom:`1.5px solid ${accent}`,paddingBottom:14,marginBottom:20}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px' }} />}
         <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.1,fontWeight:400,color:'#1a1a1a',letterSpacing:'2px',fontVariant:'small-caps',display:'block',textAlign:'center'}} />
         <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.95,color:'#666',fontStyle:'italic',marginTop:4,display:'block',textAlign:'center'}} />
         <div style={{marginTop:8,fontSize:fz*0.8,color:'#888',display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'4px 10px'}}>
@@ -266,11 +269,14 @@ function MinimalCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,rem
   );
   return (
     <div style={{fontSize:fz,background:'#fafafa',padding:'44px 48px',flex: 1, minHeight: '100%',color:'#111'}}>
-      <div style={{marginBottom:36}}>
-        <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.4,fontWeight:300,color:'#111',letterSpacing:'-1px',lineHeight:1.1,display:'block'}} />
-        <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.88,color:accent,fontWeight:500,marginTop:8,display:'block'}} />
-        <div style={{marginTop:10,display:'flex',gap:16,flexWrap:'wrap',fontSize:fz*0.76,color:'#999'}}>
-          {[data.location,data.phone,data.email1,data.linkedin].filter(v=>editMode||v).map((v,i)=><span key={i}>{v||'—'}</span>)}
+      <div style={{marginBottom:36, display: 'flex', alignItems: 'center', gap: 24}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />}
+        <div>
+          <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.4,fontWeight:300,color:'#111',letterSpacing:'-1px',lineHeight:1.1,display:'block'}} />
+          <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.88,color:accent,fontWeight:500,marginTop:8,display:'block'}} />
+          <div style={{marginTop:10,display:'flex',gap:16,flexWrap:'wrap',fontSize:fz*0.76,color:'#999'}}>
+            {[data.location,data.phone,data.email1,data.linkedin].filter(v=>editMode||v).map((v,i)=><span key={i}>{v||'—'}</span>)}
+          </div>
         </div>
       </div>
       {(editMode||data.summary)&&<MS label="About"><div style={{border:eb}}><EditableField value={data.summary} onChange={v=>update('summary',v)} editMode={editMode} multiline style={{fontSize:fz*0.9,color:'#444',lineHeight:1.8,fontWeight:300}} /></div></MS>}
@@ -315,12 +321,15 @@ function BoldCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remove
       <div style={{background:dark,padding:'26px 32px 20px',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:0,left:0,right:0,height:5,background:accent}}/>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap:'wrap',gap:12}}>
-          <div>
-            <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.3,fontWeight:800,color:'#fff',textTransform:'uppercase',lineHeight:1,}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+            {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: 4, objectFit: 'cover', border: `2px solid ${accent}` }} />}
+            <div>
+              <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.3,fontWeight:800,color:'#fff',textTransform:'uppercase',lineHeight:1,}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
             <div style={{marginTop:6,display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:24,height:3,background:accent,borderRadius:2}}/>
               <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.88,color:accent,fontWeight:600,letterSpacing:'1.5px',textTransform:'uppercase'}} inputStyle={{color:accent,background:'rgba(255,255,255,0.05)',border:'1px dashed rgba(255,255,255,0.3)'}} />
             </div>
+          </div>
           </div>
           <div style={{textAlign:'right',fontSize:fz*0.78,color:'rgba(255,255,255,0.6)',display:'flex',flexDirection:'column',gap:3}}>
             {[data.location,data.phone,data.email1,data.linkedin].filter(v=>editMode||v).map((v,i)=><span key={i}>{v||'—'}</span>)}
@@ -375,6 +384,7 @@ function ExecutiveCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,r
   return (
     <div style={{fontSize:fz,background:'#fdfcf8',padding:'48px 52px',flex: 1, minHeight: '100%',color:'#1a1510'}}>
       <div style={{textAlign:'center',marginBottom:32}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 16px', border: `1px solid ${gold}`, padding: 3 }} />}
         <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.6,fontWeight:300,color:'#1a1510',letterSpacing:'6px',textTransform:'uppercase',display:'block',}} />
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:12,margin:'10px 0'}}>
           <div style={{height:'0.5px',width:60,background:gold}}/><div style={{width:6,height:6,borderRadius:'50%',background:gold}}/><div style={{height:'0.5px',width:60,background:gold}}/>
@@ -426,17 +436,20 @@ function TechCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remove
   const inputSx={background:'rgba(255,255,255,0.05)',border:`1px dashed ${green}60`,borderRadius:3,color:'#e6edf3',fontSize:fz*0.84,outline:'none',padding:'2px 6px'};
   return (
     <div style={{fontSize:fz,background:bg,flex: 1, minHeight: '100%',color:'#e6edf3'}}>
-      <div style={{background:bg2,borderBottom:`1px solid ${border}`,padding:'24px 28px 20px'}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-          <span style={{color:green,fontSize:fz*0.85}}>~/</span>
-          <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.7,fontWeight:600,color:'#e6edf3',letterSpacing:'-0.5px'}} inputStyle={inputSx} />
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-          <span style={{color:muted,fontSize:fz*0.8}}>$</span>
-          <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.85,color:green,fontWeight:400}} inputStyle={inputSx} />
-        </div>
-        <div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:fz*0.75,color:muted}}>
-          {[['📍',data.location],['📞',data.phone],['✉',data.email1],['🔗',data.linkedin]].filter(([,v])=>editMode||v).map(([icon,v],i)=><span key={i}>{icon} {v||'—'}</span>)}
+      <div style={{background:bg2,borderBottom:`1px solid ${border}`,padding:'24px 28px 20px',display:'flex',alignItems:'flex-end',gap:20}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 70, height: 70, borderRadius: 4, objectFit: 'cover', border: `1px solid ${border}` }} />}
+        <div style={{flex:1}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+            <span style={{color:green,fontSize:fz*0.85}}>~/</span>
+            <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.7,fontWeight:600,color:'#e6edf3',letterSpacing:'-0.5px'}} inputStyle={inputSx} />
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <span style={{color:muted,fontSize:fz*0.8}}>$</span>
+            <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.85,color:green,fontWeight:400}} inputStyle={inputSx} />
+          </div>
+          <div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:fz*0.75,color:muted}}>
+            {[['📍',data.location],['📞',data.phone],['✉',data.email1],['🔗',data.linkedin]].filter(([,v])=>editMode||v).map(([icon,v],i)=><span key={i}>{icon} {v||'—'}</span>)}
+          </div>
         </div>
       </div>
       <div style={{padding:'20px 28px'}}>
@@ -492,6 +505,7 @@ function CreativeCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,re
       <div style={{position:'relative',zIndex:1,display:'flex',flex: 1, minHeight: '100%'}}>
         <div style={{width:'36%',padding:'32px 16px 32px 22px',color:'#fff',display:'flex',flexDirection:'column',gap:14}}>
           <div style={{paddingBottom:14,borderBottom:'1px solid rgba(255,255,255,0.25)'}}>
+            {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', marginBottom: 12, border: '2px solid rgba(255,255,255,0.5)' }} />}
             <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.55,fontWeight:800,color:'#fff',lineHeight:1.15,display:'block'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.4)'}} />
             <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.82,color:'rgba(255,255,255,0.8)',fontWeight:400,marginTop:5,display:'block',letterSpacing:'0.5px'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
           </div>
@@ -551,6 +565,7 @@ function AcademicCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,re
   return (
     <div style={{fontSize:fz,background:'#fff',padding:'32px 36px',flex: 1, minHeight: '100%',color:'#111'}}>
       <div style={{textAlign:'center',borderBottom:`2px solid ${accent}`,paddingBottom:14,marginBottom:22}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 100, height: 100, borderRadius: 4, objectFit: 'cover', margin: '0 auto 16px' }} />}
         <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.9,fontWeight:600,color:'#111',display:'block',letterSpacing:'0.5px'}} />
         <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.88,color:accent,display:'block',marginTop:4,fontStyle:'italic'}} />
         <div style={{marginTop:8,fontSize:fz*0.76,color:'#666',display:'flex',justifyContent:'center',flexWrap:'wrap',gap:'0 14px'}}>
@@ -607,9 +622,12 @@ function CorporateCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,r
   return (
     <div style={{fontSize:fz,background:'#fff',padding:'28px 32px',flex: 1, minHeight: '100%',color:'#1a1a1a'}}>
       <div style={{background:`${accent}`,padding:'18px 24px',marginBottom:20,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-        <div>
-          <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.65,fontWeight:700,color:'#fff',display:'block',letterSpacing:'0.5px'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.5)'}} />
-          <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.84,color:'rgba(255,255,255,0.85)',fontWeight:300,marginTop:3,letterSpacing:'1px',textTransform:'uppercase',display:'block'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
+        <div style={{display:'flex', alignItems:'center', gap:16}}>
+          {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.8)' }} />}
+          <div>
+            <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.65,fontWeight:700,color:'#fff',display:'block',letterSpacing:'0.5px'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.5)'}} />
+            <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.84,color:'rgba(255,255,255,0.85)',fontWeight:300,marginTop:3,letterSpacing:'1px',textTransform:'uppercase',display:'block'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.4)'}} />
+          </div>
         </div>
         <div style={{fontSize:fz*0.76,color:'rgba(255,255,255,0.8)',textAlign:'right',display:'flex',flexDirection:'column',gap:2}}>
           {[data.location,data.phone,data.email1,data.linkedin].filter(Boolean).map((v,i)=><span key={i}>{v}</span>)}
@@ -660,6 +678,7 @@ function TimelineCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,re
     <div style={{fontSize:fz,background:'#fff',flex: 1, minHeight: '100%',display:'flex'}}>
       <div style={{width:'30%',background:'#f8fafc',borderRight:`1px solid #e2e8f0`,padding:'28px 18px',display:'flex',flexDirection:'column',gap:18}}>
         <div>
+          {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', marginBottom: 16 }} />}
           <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.45,fontWeight:700,color:'#111',lineHeight:1.2,display:'block'}} />
           <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.82,color:accent,fontWeight:600,marginTop:5,display:'block',letterSpacing:'0.3px'}} />
           <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:4,fontSize:fz*0.77,color:'#64748b'}}>
@@ -721,7 +740,9 @@ function InfographicCV({ data,update,updateExp,updateBullet,updateSkill,addSkill
     <div style={{fontSize:fz,background:'#fff',flex: 1, minHeight: '100%',display:'flex'}}>
       <div style={{width:'35%',background:`${accent}`,padding:'28px 18px',color:'#fff',display:'flex',flexDirection:'column',gap:16}}>
         <div style={{textAlign:'center',paddingBottom:16,borderBottom:'1px solid rgba(255,255,255,0.2)'}}>
-          <div style={{width:70,height:70,borderRadius:'50%',background:'rgba(255,255,255,0.2)',border:'3px solid rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 10px',fontSize:fz*1.8,fontWeight:700,color:'#fff'}}>{data.name?data.name[0].toUpperCase():'?'}</div>
+          <div style={{width:70,height:70,borderRadius:'50%',background:'rgba(255,255,255,0.2)',border:'3px solid rgba(255,255,255,0.5)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 10px',fontSize:fz*1.8,fontWeight:700,color:'#fff',overflow:'hidden'}}>
+            {data.avatar ? <img src={data.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (data.name?data.name[0].toUpperCase():'?')}
+          </div>
           <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.2,fontWeight:700,color:'#fff',display:'block',textAlign:'center'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.4)',textAlign:'center'}} />
           <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.76,color:'rgba(255,255,255,0.8)',fontWeight:400,marginTop:4,display:'block',textAlign:'center',letterSpacing:'0.3px'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.35)',textAlign:'center'}} />
         </div>
@@ -785,14 +806,17 @@ function NordicCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remo
   );
   return (
     <div style={{fontSize:fz,background:'#fff',padding:'52px 56px',flex: 1, minHeight: '100%',color:'#111'}}>
-      <div style={{marginBottom:44}}>
-        <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.8,fontWeight:200,color:'#111',letterSpacing:'-2px',lineHeight:1,display:'block'}} />
-        <div style={{marginTop:12,display:'flex',alignItems:'center',gap:14}}>
-          <div style={{width:32,height:1.5,background:accent}}/>
-          <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.82,color:'#777',fontWeight:400,letterSpacing:'2px',textTransform:'uppercase'}} />
-        </div>
-        <div style={{marginTop:14,display:'flex',gap:20,flexWrap:'wrap',fontSize:fz*0.74,color:'#aaa'}}>
-          {[data.location,data.phone,data.email1,data.linkedin].filter(v=>editMode||v).map((v,i)=><span key={i}>{v||'—'}</span>)}
+      <div style={{marginBottom:44, display:'flex', alignItems:'center', gap:28}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }} />}
+        <div>
+          <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.8,fontWeight:200,color:'#111',letterSpacing:'-2px',lineHeight:1,display:'block'}} />
+          <div style={{marginTop:12,display:'flex',alignItems:'center',gap:14}}>
+            <div style={{width:32,height:1.5,background:accent}}/>
+            <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.82,color:'#777',fontWeight:400,letterSpacing:'2px',textTransform:'uppercase'}} />
+          </div>
+          <div style={{marginTop:14,display:'flex',gap:20,flexWrap:'wrap',fontSize:fz*0.74,color:'#aaa'}}>
+            {[data.location,data.phone,data.email1,data.linkedin].filter(v=>editMode||v).map((v,i)=><span key={i}>{v||'—'}</span>)}
+          </div>
         </div>
       </div>
       {(editMode||data.summary)&&<NS label="Profile"><EditableField value={data.summary} onChange={v=>update('summary',v)} editMode={editMode} multiline style={{fontSize:fz*0.9,color:'#444',lineHeight:1.9,fontWeight:300,maxWidth:'80%'}} /></NS>}
@@ -839,6 +863,7 @@ function ElegantCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,rem
   return (
     <div style={{fontSize:fz,background:'#fff',padding:'44px 52px',flex: 1, minHeight: '100%',color:'#1a1a1a'}}>
       <div style={{textAlign:'center',marginBottom:28}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 16px' }} />}
         <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.2,fontWeight:700,color:'#1a1a1a',letterSpacing:'4px',textTransform:'uppercase',display:'block'}} />
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,margin:'10px 0 8px'}}>
           <div style={{height:'0.5px',flex:1,background:accent,opacity:0.4}}/><div style={{width:5,height:5,borderRadius:'50%',background:accent}}/><div style={{height:'0.5px',flex:1,background:accent,opacity:0.4}}/>
@@ -899,6 +924,7 @@ function ChicagoCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,rem
   return (
     <div style={{fontSize:fz,background:'#fafaf8',flex: 1, minHeight: '100%',border:'2px solid #111'}}>
       <div style={{borderBottom:'3px solid #111',padding:'18px 28px',textAlign:'center',position:'relative'}}>
+        {data.avatar && <img src={data.avatar} alt="Profile" style={{ width: 80, height: 80, objectFit: 'cover', border: '2px solid #111', margin: '0 auto 12px', padding: 2 }} />}
         <div style={{fontSize:fz*0.65,fontWeight:700,letterSpacing:'4px',textTransform:'uppercase',color:'#666',marginBottom:6}}>{data.location||'Location'} · {data.phone||'Phone'} · {data.email1||'email@example.com'}{data.linkedin&&` · ${data.linkedin}`}</div>
         <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*2.8,fontWeight:900,color:'#111',lineHeight:1,display:'block',letterSpacing:'-1px',}} />
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,margin:'6px 0'}}>
@@ -957,7 +983,9 @@ function SunsetCV({ data,update,updateExp,updateBullet,updateSkill,addSkill,remo
     <div style={{fontSize:fz,background:'#fff',flex: 1, minHeight: '100%',display:'flex'}}>
       <div style={{width:'35%',background:`linear-gradient(160deg,${accent} 0%,#f97316 100%)`,padding:'28px 18px',color:'#fff',display:'flex',flexDirection:'column',gap:16}}>
         <div style={{paddingBottom:14,borderBottom:'1px solid rgba(255,255,255,0.25)',textAlign:'center'}}>
-          <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(255,255,255,0.25)',border:'3px solid rgba(255,255,255,0.6)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 10px',fontSize:fz*1.6,fontWeight:700,color:'#fff'}}>{data.name?data.name[0].toUpperCase():'?'}</div>
+          <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(255,255,255,0.25)',border:'3px solid rgba(255,255,255,0.6)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 10px',fontSize:fz*1.6,fontWeight:700,color:'#fff',overflow:'hidden'}}>
+            {data.avatar ? <img src={data.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (data.name?data.name[0].toUpperCase():'?')}
+          </div>
           <EditableField value={data.name} onChange={v=>update('name',v)} editMode={editMode} style={{fontSize:fz*1.3,fontWeight:700,color:'#fff',display:'block',textAlign:'center'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.15)',border:'1px dashed rgba(255,255,255,0.4)',textAlign:'center'}} />
           <EditableField value={data.title} onChange={v=>update('title',v)} editMode={editMode} style={{fontSize:fz*0.78,color:'rgba(255,255,255,0.85)',fontWeight:500,marginTop:4,display:'block',textAlign:'center',letterSpacing:'0.5px'}} inputStyle={{color:'#fff',background:'rgba(255,255,255,0.1)',border:'1px dashed rgba(255,255,255,0.35)',textAlign:'center'}} />
         </div>

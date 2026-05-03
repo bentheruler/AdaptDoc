@@ -34,7 +34,7 @@ const SaveIcon = () => (
 
 const tabLabel = { home: 'dashboard', create: 'create', documents: 'documents', admin: 'admin', settings: 'settings' };
 
-const Navbar = ({ onToggleSidebar, user, onLogout, activeTab = 'home', onSaveDraft, showSaveButton = false }) => {
+const Navbar = ({ onToggleSidebar, user, onLogout, activeTab = 'home', onSaveDraft, showSaveButton = false, onOpenSettings }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isDark, setIsDark] = useState(() => document.documentElement.getAttribute('data-theme') !== 'light');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
@@ -90,7 +90,17 @@ const Navbar = ({ onToggleSidebar, user, onLogout, activeTab = 'home', onSaveDra
         </button>
 
         <div style={{ position: 'relative' }} ref={menuRef}>
-          <button onClick={() => setShowUserMenu(p => !p)} style={s.avatarBtn}>
+          <button
+            onClick={() => {
+              if (onOpenSettings) {
+                onOpenSettings();
+              } else {
+                setShowUserMenu(p => !p);
+              }
+            }}
+            style={s.avatarBtn}
+            title="Open Settings"
+          >
             <div style={s.avatar}>
               {user?.avatar
                 ? <img src={user.avatar} alt={user?.name || 'User'} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
@@ -118,6 +128,16 @@ const Navbar = ({ onToggleSidebar, user, onLogout, activeTab = 'home', onSaveDra
                   {user?.role === 'admin' ? '⚡ Admin' : '● User Account'}
                 </div>
               </div>
+              {onOpenSettings && (
+                <button
+                  onClick={() => { setShowUserMenu(false); onOpenSettings(); }}
+                  style={s.dropdownItem}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  ⚙️ Settings
+                </button>
+              )}
               <button
                 onClick={() => { if (onLogout) onLogout(); window.location.href = '/login'; }}
                 style={s.dropdownLogout}
@@ -202,6 +222,15 @@ const s = {
   },
   dropdownHeader: {
     padding: '14px 16px',
+    borderBottom: '1px solid var(--border-color)',
+  },
+  dropdownItem: {
+    width: '100%', padding: '11px 16px',
+    background: 'transparent', border: 'none',
+    textAlign: 'left', cursor: 'pointer',
+    color: 'var(--text-secondary)',
+    fontSize: 13, fontWeight: 500,
+    transition: 'background 0.15s',
     borderBottom: '1px solid var(--border-color)',
   },
   dropdownLogout: {

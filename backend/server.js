@@ -42,6 +42,11 @@ app.get('/', (req, res) => {
   res.send("API Running...");
 });
 
+// Lightweight health check — used by frontend to warm Railway from cold sleep
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', ts: Date.now() });
+});
+
 app.use("/api/documents", require("./routes/documents.js"));
 
 app.use('/api/ai', require('./routes/ai'));
