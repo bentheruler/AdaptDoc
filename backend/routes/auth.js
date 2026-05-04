@@ -141,7 +141,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // ✅ Respond immediately — don't await email sending
+    //  Respond immediately — don't await email sending
     res.status(201).json({
       message: 'User registered successfully. Please check your email to verify your account.',
     });
@@ -357,7 +357,7 @@ router.post('/google-login', async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30m' }
     );
 
     const refreshToken = jwt.sign(
